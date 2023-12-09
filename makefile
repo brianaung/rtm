@@ -1,10 +1,13 @@
+include .env
+
 NAME=rtm
+RTM_PATH=cmd/rtm/main.go
 
 run:
-	go run cmd/rtm/rtm.go
+	go run $(RTM_PATH)
 
 build:
-	go build -o bin/$(NAME) cmd/rtm/rtm.go
+	go build -o bin/$(NAME) $(RTM_PATH)
 
 start:
 	./bin/$(NAME)
@@ -12,4 +15,13 @@ start:
 clean:
 	rm -rf bin
 
-.PHONY: run build start clean
+up:
+	@goose -dir internal/db/migrations/ postgres "user=${DATABASE_USER} password=${DATABASE_PASSWORD} dbname=${DATABASE_NAME} sslmode=disable" up
+
+down:
+	@goose -dir internal/db/migrations/ postgres "user=${DATABASE_USER} password=${DATABASE_PASSWORD} dbname=${DATABASE_NAME} sslmode=disable" down
+
+status:
+	@goose -dir internal/db/migrations/ postgres "user=${DATABASE_USER} password=${DATABASE_PASSWORD} dbname=${DATABASE_NAME} sslmode=disable" status
+
+.PHONY: run build start clean up down status
