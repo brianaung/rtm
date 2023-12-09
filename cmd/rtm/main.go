@@ -39,7 +39,7 @@ func main() {
 	// inject dependencies to services
 	userService := user.NewService(r, dbpool.Get())
 
-	// init services
+	// start services
 	userService.Routes()
 
 	log.Fatal(http.ListenAndServe(":3000", r))

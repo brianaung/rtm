@@ -23,6 +23,14 @@ func NewService(r *chi.Mux, db *pgxpool.Pool) (s *service) {
 }
 
 func (s *service) Routes() {
+	// public
+	s.r.Group(func(r chi.Router) {
+		r.Post("/", s.handleFoo)
+		r.Post("/signup", s.handleSignup)
+		r.Post("/login", s.handleLogin)
+	})
+
+	// protected
 	s.r.Group(func(r chi.Router) {
 		r.Use(jwtauth.Verifier(s.jwtAuth))
 		r.Use(jwtauth.Authenticator(s.jwtAuth))
@@ -33,10 +41,4 @@ func (s *service) Routes() {
 		})
 		r.Get("/logout", s.handleLogout)
 	})
-
-	s.r.Group(func(r chi.Router) {
-		r.Post("/signup", s.handleSignup)
-		r.Post("/login", s.handleLogin)
-	})
-
 }
