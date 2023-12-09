@@ -7,3 +7,7 @@ func hashAndSalt(password string) (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 	return string(hashedPassword), err
 }
+
+func checkPassword(hashed string, p string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hashed), []byte(p))
+}
