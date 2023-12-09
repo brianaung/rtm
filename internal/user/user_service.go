@@ -25,8 +25,10 @@ func (s *service) Routes() {
 	s.r.Group(func(r chi.Router) {
 		r.Get("/", s.handleHome)
 		r.Post("/signup", s.handleSignup)
+		r.Get("/signup-form", s.handleGetSignupForm)
 		r.Post("/login", s.handleLogin)
-		r.Post("/logout", s.handleLogout)
+		r.Get("/login-form", s.handleGetLoginForm)
+		r.Get("/logout", s.handleLogout)
 	})
 
 	// protected

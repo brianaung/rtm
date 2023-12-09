@@ -8,9 +8,18 @@ import (
 )
 
 func (s *service) handleHome(w http.ResponseWriter, r *http.Request) {
-	// w.Write([]byte("Hello from user service!"))
 	w.WriteHeader(http.StatusFound)
-	ui.RenderPage(w, nil, "login")
+	ui.Render(w, nil, "index")
+}
+
+func (s *service) handleGetLoginForm(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusFound)
+	ui.Render(w, nil, "loginForm")
+}
+
+func (s *service) handleGetSignupForm(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusFound)
+	ui.Render(w, nil, "signupForm")
 }
 
 func (s *service) handleSignup(w http.ResponseWriter, r *http.Request) {
@@ -34,6 +43,8 @@ func (s *service) handleSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("HX-Redirect", "/dashboard")
+	w.WriteHeader(http.StatusOK)
 	w.Write(res)
 }
 
@@ -83,5 +94,5 @@ func (s *service) handleLogout(w http.ResponseWriter, r *http.Request) {
 
 func (s *service) handleDashboard(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusFound)
-	ui.RenderPage(w, nil, "dashboard")
+	ui.Render(w, nil, "dashboard")
 }
