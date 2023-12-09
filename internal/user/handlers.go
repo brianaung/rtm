@@ -43,6 +43,9 @@ func (s *service) handleSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	claims := map[string]interface{}{"username": u.Username}
+	setTokenCookie(w, s.jwtAuth, claims)
+
 	w.Header().Set("HX-Redirect", "/dashboard")
 	w.WriteHeader(http.StatusOK)
 	w.Write(res)
@@ -64,14 +67,6 @@ func (s *service) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, tokenString, _ := s.jwtAuth.Encode(map[string]interface{}{"username": u.Username})
-	cookie := http.Cookie{
-		Name:     "jwt",
-		Value:    tokenString,
-		HttpOnly: true, // Helps to mitigate XSS attacks
-	}
-	http.SetCookie(w, &cookie)
-
 	// response user data
 	res, err := json.Marshal(u)
 	if err != nil {
@@ -79,6 +74,9 @@ func (s *service) handleLogin(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
+
+	claims := map[string]interface{}{"username": u.Username}
+	setTokenCookie(w, s.jwtAuth, claims)
 
 	w.Header().Set("HX-Redirect", "/dashboard")
 	w.WriteHeader(http.StatusOK)
