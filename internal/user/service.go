@@ -9,14 +9,14 @@ import (
 )
 
 type service struct {
-	r       *chi.Mux
-	db      *pgxpool.Pool
-	jwtAuth *jwtauth.JWTAuth
+	r  *chi.Mux
+	db *pgxpool.Pool
+	ja *jwtauth.JWTAuth
 }
 
 func NewService(r *chi.Mux, db *pgxpool.Pool) (s *service) {
 	jwtAuth := jwtauth.New("HS256", []byte(os.Getenv("JWT_SECRET")), nil)
-	s = &service{r: r, db: db, jwtAuth: jwtAuth}
+	s = &service{r: r, db: db, ja: jwtAuth}
 	return
 }
 
@@ -33,8 +33,9 @@ func (s *service) Routes() {
 
 	// protected
 	s.r.Group(func(r chi.Router) {
-		r.Use(jwtauth.Verifier(s.jwtAuth))
-		r.Use(Authenticator(s.jwtAuth))
+		// middlewares
+		r.Use(jwtauth.Verifier(s.ja))
+		r.Use(Authenticator(s.ja))
 
 		r.Get("/dashboard", s.handleDashboard)
 	})

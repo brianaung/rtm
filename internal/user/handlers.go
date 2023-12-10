@@ -8,7 +8,7 @@ import (
 
 func (s *service) handleHome(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusFound)
-	ui.Render(w, nil, "index")
+	ui.Render(w, nil, "landing")
 }
 
 func (s *service) handleGetLoginForm(w http.ResponseWriter, r *http.Request) {
@@ -21,6 +21,8 @@ func (s *service) handleGetSignupForm(w http.ResponseWriter, r *http.Request) {
 	ui.Render(w, nil, "signupForm")
 }
 
+/* ================================================ */
+/* Deals with user auth, jwt token creations and managing token cookies */
 func (s *service) handleSignup(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
 	email := r.FormValue("email")
@@ -43,7 +45,7 @@ func (s *service) handleSignup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	claims := map[string]interface{}{"id": u.ID, "username": u.Username, "email": u.Email}
-	setTokenCookie(w, s.jwtAuth, claims)
+	setTokenCookie(w, s.ja, claims)
 
 	w.Header().Set("HX-Redirect", "/dashboard")
 	w.WriteHeader(http.StatusOK)
@@ -65,7 +67,7 @@ func (s *service) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	claims := map[string]interface{}{"id": u.ID, "username": u.Username, "email": u.Email}
-	setTokenCookie(w, s.jwtAuth, claims)
+	setTokenCookie(w, s.ja, claims)
 
 	w.Header().Set("HX-Redirect", "/dashboard")
 	w.WriteHeader(http.StatusOK)
@@ -77,6 +79,8 @@ func (s *service) handleLogout(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("HX-Redirect", "/")
 	w.WriteHeader(http.StatusFound)
 }
+
+/* ================================================ */
 
 func (s *service) handleDashboard(w http.ResponseWriter, r *http.Request) {
 	userData := r.Context().Value("user")
