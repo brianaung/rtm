@@ -1,8 +1,6 @@
 {{define "content"}}
-<article>
-    <div id="container">
-        <button hx-swap="outerHTML" hx-target="#container" hx-get="/login-form">Login</button>
-        <button hx-swap="outerHTML" hx-target="#container" hx-get="/signup-form">Signup</button>
-    </div>
+<article id="home">
+    <button hx-swap="outerHTML" hx-target="#home" hx-get="/login-form">Login</button>
+    <button hx-swap="outerHTML" hx-target="#home" hx-get="/signup-form">Signup</button>
 </article>
 {{end}}

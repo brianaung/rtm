@@ -1,7 +1,6 @@
 package user
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/brianaung/rtm/ui"
@@ -27,7 +26,7 @@ func (s *service) handleSignup(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 
-	// input validations
+	// todo: more input validations
 	if u, _ := getOneUser(r.Context(), s.db, username); u != nil {
 		w.Write([]byte("username already exists"))
 		return
@@ -36,26 +35,24 @@ func (s *service) handleSignup(w http.ResponseWriter, r *http.Request) {
 	hashedPassword, _ := hashAndSalt(password)
 	u := &user{Username: username, Email: email, Password: hashedPassword}
 	u, err := addUser(r.Context(), s.db, u)
-	res, err := json.Marshal(u)
+	// res, err := json.Marshal(u)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
-	claims := map[string]interface{}{"username": u.Username}
+	claims := map[string]interface{}{"id": u.ID, "username": u.Username, "email": u.Email}
 	setTokenCookie(w, s.jwtAuth, claims)
 
 	w.Header().Set("HX-Redirect", "/dashboard")
 	w.WriteHeader(http.StatusOK)
-	w.Write(res)
 }
 
 func (s *service) handleLogin(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 
-	// authenticate user
 	u, err := getOneUser(r.Context(), s.db, username)
 	if err != nil {
 		w.Write([]byte("user not found"))
@@ -67,20 +64,11 @@ func (s *service) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// response user data
-	res, err := json.Marshal(u)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	claims := map[string]interface{}{"username": u.Username}
+	claims := map[string]interface{}{"id": u.ID, "username": u.Username, "email": u.Email}
 	setTokenCookie(w, s.jwtAuth, claims)
 
 	w.Header().Set("HX-Redirect", "/dashboard")
 	w.WriteHeader(http.StatusOK)
-	w.Write(res)
 }
 
 func (s *service) handleLogout(w http.ResponseWriter, r *http.Request) {
@@ -91,6 +79,7 @@ func (s *service) handleLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *service) handleDashboard(w http.ResponseWriter, r *http.Request) {
+	userData := r.Context().Value("user")
 	w.WriteHeader(http.StatusFound)
-	ui.Render(w, nil, "dashboard")
+	ui.Render(w, userData, "dashboard")
 }
