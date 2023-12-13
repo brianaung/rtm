@@ -7,23 +7,23 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type database struct {
+type Database struct {
 	db *pgxpool.Pool
 }
 
-func Init() (*database, error) {
+func Init() (*Database, error) {
 	dbpool, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
 	err = dbpool.Ping(context.Background())
 	if err != nil {
 		return nil, err
 	}
-	return &database{db: dbpool}, nil
+	return &Database{db: dbpool}, nil
 }
 
-func (d *database) Get() *pgxpool.Pool {
+func (d *Database) Get() *pgxpool.Pool {
 	return d.db
 }
 
-func (d *database) Close() {
+func (d *Database) Close() {
 	d.db.Close()
 }
