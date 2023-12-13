@@ -14,7 +14,7 @@ type Auth struct {
 	ja *jwtauth.JWTAuth
 }
 
-type userContext struct {
+type UserContext struct {
 	ID       string `json:"id"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
@@ -44,7 +44,7 @@ func (a *Auth) Authenticator() func(http.Handler) http.Handler {
 			}
 
 			// set context with logged in user data so other handlers have access to it
-			res := userContext{
+			res := UserContext{
 				ID:       claims["id"].(string),
 				Username: claims["username"].(string),
 				Email:    claims["email"].(string),
