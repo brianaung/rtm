@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/brianaung/rtm/internal/auth"
+	"github.com/brianaung/rtm/internal/chat"
 	"github.com/brianaung/rtm/internal/db"
 	"github.com/brianaung/rtm/internal/user"
 	"github.com/go-chi/chi/v5"
@@ -43,9 +44,11 @@ func main() {
 
 	// inject dependencies to services
     userService := user.NewService(r, dbpool.Get(), userauth)
+    chatService := chat.NewService(r, dbpool.Get(), userauth)
 
 	// start services
 	userService.Routes()
+	chatService.Routes()
 
 	log.Fatal(http.ListenAndServe(":3000", r))
 }
