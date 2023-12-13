@@ -3,6 +3,7 @@ package user
 import (
 	"net/http"
 
+	"github.com/brianaung/rtm/internal/auth"
 	"github.com/brianaung/rtm/ui"
 )
 
@@ -83,7 +84,7 @@ func (s *service) handleLogout(w http.ResponseWriter, r *http.Request) {
 /* ================================================ */
 
 func (s *service) handleDashboard(w http.ResponseWriter, r *http.Request) {
-	userData := r.Context().Value("user")
+	userData := r.Context().Value("user").(*auth.UserContext)
 	w.WriteHeader(http.StatusFound)
 	ui.Render(w, userData, "dashboard")
 }
