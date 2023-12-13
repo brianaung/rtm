@@ -3,14 +3,14 @@ package user
 import (
 	"github.com/brianaung/rtm/internal/auth"
 	"github.com/go-chi/chi/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/go-chi/jwtauth/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type service struct {
-	r  *chi.Mux
-	db *pgxpool.Pool
-    userauth *auth.Auth 
+	r        *chi.Mux
+	db       *pgxpool.Pool
+	userauth *auth.Auth
 }
 
 func NewService(r *chi.Mux, db *pgxpool.Pool, userauth *auth.Auth) (s *service) {
