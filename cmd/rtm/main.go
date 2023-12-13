@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/brianaung/rtm/internal/auth"
 	"github.com/brianaung/rtm/internal/db"
 	"github.com/brianaung/rtm/internal/user"
 	"github.com/go-chi/chi/v5"
@@ -30,14 +31,18 @@ func main() {
 		MaxAge:           300,
 	}))
 
+    // setup db
 	dbpool, err := db.Init()
 	if err != nil {
 		log.Fatal("Error initialising db")
 	}
 	defer dbpool.Close()
 
+    // setup auth
+    userauth := auth.Init()
+
 	// inject dependencies to services
-	userService := user.NewService(r, dbpool.Get())
+    userService := user.NewService(r, dbpool.Get(), userauth)
 
 	// start services
 	userService.Routes()

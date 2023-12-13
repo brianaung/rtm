@@ -34,8 +34,8 @@ func (s *service) handleSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hashedPassword, _ := hashAndSalt(password)
-	u := &user{Username: username, Email: email, Password: hashedPassword}
+	hashedPassword, _ := s.userauth.HashAndSalt(password)
+	u := &User{Username: username, Email: email, Password: hashedPassword}
 	u, err := addUser(r.Context(), s.db, u)
 	// res, err := json.Marshal(u)
 	if err != nil {
@@ -45,7 +45,7 @@ func (s *service) handleSignup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	claims := map[string]interface{}{"id": u.ID, "username": u.Username, "email": u.Email}
-	setTokenCookie(w, s.ja, claims)
+	s.userauth.SetTokenCookie(w, claims)
 
 	w.Header().Set("HX-Redirect", "/dashboard")
 	w.WriteHeader(http.StatusOK)
@@ -60,14 +60,14 @@ func (s *service) handleLogin(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("user not found"))
 		return
 	}
-	err = checkPassword(u.Password, password)
+	err = s.userauth.CheckPassword(u.Password, password)
 	if err != nil {
 		w.Write([]byte("wrong password"))
 		return
 	}
 
 	claims := map[string]interface{}{"id": u.ID, "username": u.Username, "email": u.Email}
-	setTokenCookie(w, s.ja, claims)
+	s.userauth.SetTokenCookie(w, claims)
 
 	w.Header().Set("HX-Redirect", "/dashboard")
 	w.WriteHeader(http.StatusOK)
