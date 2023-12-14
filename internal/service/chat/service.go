@@ -1,11 +1,10 @@
 package chat
 
 import (
-	"net/http"
-
 	"github.com/brianaung/rtm/internal/auth"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/jwtauth/v5"
+	//"github.com/go-chi/jwtauth/v5"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -24,12 +23,12 @@ func (s *service) Routes() {
 	// protected
 	s.r.Group(func(r chi.Router) {
 		// middlewares
-		r.Use(jwtauth.Verifier(s.userauth.GetJA()))
-		r.Use(s.userauth.Authenticator())
+		//r.Use(jwtauth.Verifier(s.userauth.GetJA()))
+		//r.Use(s.userauth.Authenticator())
 
-		r.Get("/chat", func(w http.ResponseWriter, r *http.Request) {
-			user := r.Context().Value("user").(*auth.UserContext)
-			w.Write([]byte("Hello from chat " + user.Username))
-		})
+		hub := newHub()
+		go hub.run()
+
+		r.Get("/chat", s.handleServeWs(hub))
 	})
 }
