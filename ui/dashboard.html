@@ -3,5 +3,11 @@
     <button hx-get="/logout" hx-trigger="click" hx-swap="none">logout</button>
     <h1>Dashboard</h1>
     <p>G'day {{.Username}}!</p>
+
+    <form hx-post="/dashboard/create" hx-trigger="submit" hx-swap="none">
+        <label for="roomName">Name</label>
+        <input id="roomName" name="roomName" rows="1" cols="20" />
+        <input type="submit" value="Create Room" />
+    </form>
 </article>
 {{end}}

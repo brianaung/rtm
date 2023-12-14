@@ -9,17 +9,17 @@ import (
 
 func (s *service) handleHome(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusFound)
-	ui.Render(w, nil, "landing")
+	ui.RenderPage(w, nil, "landing")
 }
 
 func (s *service) handleGetLoginForm(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusFound)
-	ui.Render(w, nil, "loginForm")
+    ui.RenderComponent(w, nil, "login-form")
 }
 
 func (s *service) handleGetSignupForm(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusFound)
-	ui.Render(w, nil, "signupForm")
+    ui.RenderComponent(w, nil, "signup-form")
 }
 
 /* ================================================ */
@@ -86,5 +86,5 @@ func (s *service) handleLogout(w http.ResponseWriter, r *http.Request) {
 func (s *service) handleDashboard(w http.ResponseWriter, r *http.Request) {
 	userData := r.Context().Value("user").(*auth.UserContext)
 	w.WriteHeader(http.StatusFound)
-	ui.Render(w, userData, "dashboard")
+	ui.RenderPage(w, userData, "dashboard")
 }

@@ -33,13 +33,17 @@ func (s *service) Routes() {
 
         // todo: route for serving create room form page
 
-		r.Get("/dashboard/create/{roomid}", func(w http.ResponseWriter, r *http.Request) {
-			// todo: use form
-			roomid := chi.URLParam(r, "roomid")
+		r.Post("/dashboard/create", func(w http.ResponseWriter, r *http.Request) {
+			roomName := r.FormValue("roomName")
+            if _, ok := s.hubs[roomName]; ok {
+                w.Write([]byte("Room already exists"))
+                return
+            }
+
 			h := newHub()
-			s.hubs[roomid] = h
+			s.hubs[roomName] = h
 			go h.run()
-			http.Redirect(w, r, "/dashboard/room/"+roomid, http.StatusSeeOther)
+			http.Redirect(w, r, "/dashboard/room/"+roomName, http.StatusSeeOther)
 		})
 
 		r.Get("/dashboard/room/{roomid}", func(w http.ResponseWriter, r *http.Request) {
@@ -48,7 +52,7 @@ func (s *service) Routes() {
 				// todo: error handle
 				return
 			}
-			ui.Render(w, struct{ RoomId string }{RoomId: roomid}, "chatroom")
+			ui.RenderPage(w, struct{ RoomId string }{RoomId: roomid}, "chatroom")
 		})
 
         // todo: unregister route?
