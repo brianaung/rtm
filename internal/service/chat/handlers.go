@@ -18,7 +18,8 @@ func (s *service) handleServeWs(w http.ResponseWriter, r *http.Request) {
 
 	// todo: add more client info? like the curr user info
 
-	if _, ok := s.hubs[roomid]; !ok {
+	_, ok := s.hubs[roomid]
+	if !ok {
 		return
 	}
 

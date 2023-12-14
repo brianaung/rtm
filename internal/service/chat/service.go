@@ -34,21 +34,24 @@ func (s *service) Routes() {
 		r.Get("/dashboard/create/{roomid}", func(w http.ResponseWriter, r *http.Request) {
 			// todo: use form
 			roomid := chi.URLParam(r, "roomid")
-			s.hubs[roomid] = newHub()
+			h := newHub()
+			s.hubs[roomid] = h
+			go h.run()
 			http.Redirect(w, r, "/dashboard/room/"+roomid, http.StatusSeeOther)
 		})
 
 		r.Get("/dashboard/room/{roomid}", func(w http.ResponseWriter, r *http.Request) {
 			roomid := chi.URLParam(r, "roomid")
-			if h, ok := s.hubs[roomid]; !ok {
+			if _, ok := s.hubs[roomid]; !ok {
+				// todo: error handle
 				return
-			} else {
-				go h.run()
-				ui.Render(w, struct{ RoomId string }{RoomId: roomid}, "chatroom")
 			}
+			ui.Render(w, struct{ RoomId string }{RoomId: roomid}, "chatroom")
 		})
 
-		// ws connections
+        // todo: unregister route?
+
+		// serve ws connection
 		r.Get("/ws/{roomid}", s.handleServeWs)
 	})
 }
