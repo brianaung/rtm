@@ -55,7 +55,11 @@ func (s *service) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Room does not exists", http.StatusInternalServerError)
 		return
 	}
-	hs.uids = append(hs.uids, userData.ID)
+
+    // append if not already in the room
+    if !contains(hs.uids, userData.ID) {
+	    hs.uids = append(hs.uids, userData.ID)
+    }
 
 	w.Header().Set("HX-Redirect", "/dashboard/room/"+roomid)
 	w.WriteHeader(http.StatusOK)
