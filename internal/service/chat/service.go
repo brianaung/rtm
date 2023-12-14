@@ -31,6 +31,8 @@ func (s *service) Routes() {
 
 		// todo: another auth middleware: user needs to be in the room?
 
+        // todo: route for serving create room form page
+
 		r.Get("/dashboard/create/{roomid}", func(w http.ResponseWriter, r *http.Request) {
 			// todo: use form
 			roomid := chi.URLParam(r, "roomid")
@@ -52,6 +54,6 @@ func (s *service) Routes() {
         // todo: unregister route?
 
 		// serve ws connection
-		r.Get("/ws/{roomid}", s.handleServeWs)
+		r.Get("/ws/chat/{roomid}", s.handleServeWs)
 	})
 }

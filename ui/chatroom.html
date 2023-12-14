@@ -1,6 +1,6 @@
 {{define "content"}}
 <h1>{{.RoomId}}</h1>
-<div hx-ext="ws" ws-connect="/ws/{{.RoomId}}" ws-target="#{{.RoomId}}-log">
+<div hx-ext="ws" ws-connect="/ws/chat/{{.RoomId}}" ws-target="#{{.RoomId}}-log">
     <div id="{{.RoomId}}-log" hx-swap-oob="beforeend">log:</div>
     <form id="{{.RoomId}}" ws-send>
         <input type="submit" value="Send" />
