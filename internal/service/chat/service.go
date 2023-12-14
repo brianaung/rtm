@@ -1,10 +1,7 @@
 package chat
 
 import (
-	"net/http"
-
 	"github.com/brianaung/rtm/internal/auth"
-	"github.com/brianaung/rtm/ui"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -14,11 +11,16 @@ type service struct {
 	r        *chi.Mux
 	db       *pgxpool.Pool
 	userauth *auth.Auth
-	hubs     map[string]*hub
+	hubs     map[string]*hubdata
+}
+
+type hubdata struct {
+    h *hub
+    uids []string
 }
 
 func NewService(r *chi.Mux, db *pgxpool.Pool, userauth *auth.Auth) (s *service) {
-	s = &service{r: r, db: db, userauth: userauth, hubs: make(map[string]*hub)}
+	s = &service{r: r, db: db, userauth: userauth, hubs: make(map[string]*hubdata)}
 	return
 }
 
@@ -31,13 +33,14 @@ func (s *service) Routes() {
 
 		// todo: another auth middleware: user needs to be in the room?
 
-        // todo: route for serving create room form page
+		// todo: route for serving create room form page
 
 		r.Get("/dashboard", s.handleDashboard)
 		r.Post("/dashboard/create", s.handleCreateRoom)
-		r.Get("/dashboard/room/{roomid}", s.handleJoinRoom)
+		r.Post("/dashboard/join", s.handleJoinRoom)
+		r.Get("/dashboard/room/{roomid}", s.handleGotoRoom)
 
-        // todo: unregister route?
+		// todo: unregister route?
 
 		// serve ws connection
 		r.Get("/ws/chat/{roomid}", s.handleServeWs)
