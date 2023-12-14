@@ -3,32 +3,30 @@ package chat
 import (
 	"log"
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
 )
 
-func (s *service) handleServeWs(hub *hub) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		conn, err := upgrader.Upgrade(w, r, nil)
-		if err != nil {
-			log.Println(err)
-			return
-		}
+func (s *service) handleServeWs(w http.ResponseWriter, r *http.Request) {
+	roomid := chi.URLParam(r, "id")
 
-		// todo: add more client info? like the curr user info
-
-		client := &client{hub: hub, conn: conn, send: make(chan []byte, 256)}
-		client.hub.register <- client
-
-		// Allow collection of memory referenced by the caller by doing all work in
-		// new goroutines.
-		go client.writePump()
-		go client.readPump()
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println(err)
+		return
 	}
-}
 
-func (s *service) createRoom(w http.ResponseWriter, r *http.Request) {
+	// todo: add more client info? like the curr user info
 
-}
+	if _, ok := s.hubs[roomid]; !ok {
+		return
+	}
 
-func (s *service) joinRoom(w http.ResponseWriter, r *http.Request) {
+	client := &client{hub: s.hubs[roomid], conn: conn, send: make(chan []byte, 256)}
+	client.hub.register <- client
 
+	// Allow collection of memory referenced by the caller by doing all work in
+	// new goroutines.
+	go client.writePump()
+	go client.readPump()
 }

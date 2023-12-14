@@ -3,13 +3,5 @@
     <button hx-get="/logout" hx-trigger="click" hx-swap="none">logout</button>
     <h1>Dashboard</h1>
     <p>G'day {{.Username}}!</p>
-
-    <div hx-ext="ws" ws-connect="/chat" ws-target="#log">
-        <div id="log" hx-swap-oob="beforeend">log:</div>
-        <form id="form" ws-send>
-            <input type="submit" value="Send" />
-            <input type="text" name="msg" size="64" autofocus />
-        </form>
-    </div>
 </article>
 {{end}}

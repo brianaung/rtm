@@ -109,7 +109,10 @@ func (c *client) writePump() {
 			}
 
 			t, _ := template.ParseFiles("ui/ws-message.html")
-			t.Execute(w, data.Msg)
+			t.Execute(w, struct {
+				RoomId string
+				Msg    string
+			}{RoomId: data.Headers["HX-Target"], Msg: data.Msg})
 
 			// Add queued chat messages to the current websocket message.
 			n := len(c.send)
