@@ -2,11 +2,17 @@
 <article>
     <button hx-get="/logout" hx-trigger="click" hx-swap="none">logout</button>
     <h1>Dashboard</h1>
-    <p>G'day {{.Username}}!</p>
+    <p>G'day {{.User.Username}}!</p>
+
+    <p>Your active rooms:</p>
+    <ul>
+        {{range $val := .Roomids}}
+        <li><a href="/dashboard/room/{{$val}}">{{$val}}</a></li>
+        {{end}}
+    </ul>
 
     <form hx-post="/dashboard/create" hx-trigger="submit" hx-swap="none">
-        <label for="roomName">Name</label>
-        <input id="roomName" name="roomName" rows="1" cols="20" />
+        <input id="roomid" name="roomid" rows="1" cols="20" placeholder="Enter your room name" />
         <input type="submit" value="Create Room" />
     </form>
 </article>

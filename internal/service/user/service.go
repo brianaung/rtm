@@ -34,7 +34,6 @@ func (s *service) Routes() {
 		r.Use(jwtauth.Verifier(s.userauth.GetJA()))
 		r.Use(s.userauth.Authenticator())
 
-		r.Get("/dashboard", s.handleDashboard)
 		r.Get("/logout", s.handleLogout)
 	})
 }
