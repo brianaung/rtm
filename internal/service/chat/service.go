@@ -3,7 +3,7 @@ package chat
 import (
 	"github.com/brianaung/rtm/internal/auth"
 	"github.com/go-chi/chi/v5"
-	//"github.com/go-chi/jwtauth/v5"
+	"github.com/go-chi/jwtauth/v5"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -23,8 +23,8 @@ func (s *service) Routes() {
 	// protected
 	s.r.Group(func(r chi.Router) {
 		// middlewares
-		//r.Use(jwtauth.Verifier(s.userauth.GetJA()))
-		//r.Use(s.userauth.Authenticator())
+		r.Use(jwtauth.Verifier(s.userauth.GetJA()))
+		r.Use(s.userauth.Authenticator())
 
 		hub := newHub()
 		go hub.run()

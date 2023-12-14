@@ -12,6 +12,9 @@ func (s *service) handleServeWs(hub *hub) http.HandlerFunc {
 			log.Println(err)
 			return
 		}
+
+		// todo: add more client info? like the curr user info
+
 		client := &client{hub: hub, conn: conn, send: make(chan []byte, 256)}
 		client.hub.register <- client
 
@@ -20,4 +23,12 @@ func (s *service) handleServeWs(hub *hub) http.HandlerFunc {
 		go client.writePump()
 		go client.readPump()
 	}
+}
+
+func (s *service) createRoom(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (s *service) joinRoom(w http.ResponseWriter, r *http.Request) {
+
 }
