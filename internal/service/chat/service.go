@@ -18,7 +18,7 @@ type service struct {
 }
 
 func NewService(r *chi.Mux, db *pgxpool.Pool, userauth *auth.Auth) (s *service) {
-    s = &service{r: r, db: db, userauth: userauth, hubs: make(map[string]*hub)}
+	s = &service{r: r, db: db, userauth: userauth, hubs: make(map[string]*hub)}
 	return
 }
 
@@ -31,23 +31,24 @@ func (s *service) Routes() {
 
 		// todo: another auth middleware: user needs to be in the room?
 
-		r.Get("/dashboard/create/{id}", func(w http.ResponseWriter, r *http.Request) {
-            // todo: use form
-			s.hubs[chi.URLParam(r, "id")] = newHub()
-            http.Redirect(w, r, "/room/"+chi.URLParam(r, "id"), http.StatusSeeOther)
+		r.Get("/dashboard/create/{roomid}", func(w http.ResponseWriter, r *http.Request) {
+			// todo: use form
+			roomid := chi.URLParam(r, "roomid")
+			s.hubs[roomid] = newHub()
+			http.Redirect(w, r, "/dashboard/room/"+roomid, http.StatusSeeOther)
 		})
 
-		r.Get("/dashboard/room/{id}", func(w http.ResponseWriter, r *http.Request) {
-			roomid := chi.URLParam(r, "id")
+		r.Get("/dashboard/room/{roomid}", func(w http.ResponseWriter, r *http.Request) {
+			roomid := chi.URLParam(r, "roomid")
 			if h, ok := s.hubs[roomid]; !ok {
-                return
-            } else {
-                go h.run()
-			    ui.Render(w, struct{ RoomId string }{RoomId: roomid}, "chatroom")
-            }
+				return
+			} else {
+				go h.run()
+				ui.Render(w, struct{ RoomId string }{RoomId: roomid}, "chatroom")
+			}
 		})
 
 		// ws connections
-		r.Get("/ws/{id}", s.handleServeWs)
+		r.Get("/ws/{roomid}", s.handleServeWs)
 	})
 }

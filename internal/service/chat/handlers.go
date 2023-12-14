@@ -8,7 +8,7 @@ import (
 )
 
 func (s *service) handleServeWs(w http.ResponseWriter, r *http.Request) {
-	roomid := chi.URLParam(r, "id")
+	roomid := chi.URLParam(r, "roomid")
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
