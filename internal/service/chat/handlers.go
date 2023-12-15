@@ -23,7 +23,7 @@ func (s *service) serveWs(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 	}
 	// if so, register client
-	client := &client{hub: s.hubs[rid].h, conn: conn, send: make(chan []byte, 256)}
+	client := newClient(s.hubs[rid].h, conn)
 	client.hub.register <- client
 	// Allow collection of memory referenced by the caller by doing all work in
 	// new goroutines.

@@ -50,6 +50,14 @@ type client struct {
 	send chan []byte
 }
 
+func newClient(hub *hub, conn *websocket.Conn) *client {
+	return &client{
+		hub:  hub,
+		conn: conn,
+		send: make(chan []byte, 256),
+	}
+}
+
 // readPump pumps messages from the websocket connection to the hub.
 //
 // The application runs readPump in a per-connection goroutine. The application
