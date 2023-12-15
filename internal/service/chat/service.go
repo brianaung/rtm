@@ -11,16 +11,11 @@ type service struct {
 	r        *chi.Mux
 	db       *pgxpool.Pool
 	userauth *auth.Auth
-	hubs     map[string]*hubdata // { "hubName" : { hub, uids set }
-}
-
-type hubdata struct {
-	h    *hub
-	uids map[string]bool // uids set
+	hubs     map[string]*hub // { "hubName" : { hub, uids set }
 }
 
 func NewService(r *chi.Mux, db *pgxpool.Pool, userauth *auth.Auth) (s *service) {
-	s = &service{r: r, db: db, userauth: userauth, hubs: make(map[string]*hubdata)}
+	s = &service{r: r, db: db, userauth: userauth, hubs: make(map[string]*hub)}
 	return
 }
 

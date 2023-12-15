@@ -1,6 +1,7 @@
 package chat
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/brianaung/rtm/internal/auth"
@@ -12,9 +13,9 @@ func (s *service) handleDashboard(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
 	// append room if user is inside
 	rids := make([]string, 0)
-	for k := range s.hubs {
-		if _, ok := s.hubs[k].uids[user.ID]; ok {
-			rids = append(rids, k)
+	for rid := range s.hubs {
+		if _, ok := s.hubs[rid].clients[user.ID]; ok {
+			rids = append(rids, rid)
 		}
 	}
 	// data for html
@@ -40,8 +41,12 @@ func (s *service) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 	}
 	// setup the hub (room)
 	h := newHub()
-	s.hubs[rid] = &hubdata{h: h, uids: map[string]bool{user.ID: true}}
+	s.hubs[rid] = h
 	go h.run()
+
+	client := newClient(w, r, user.ID, h)
+	h.register <- client
+
 	// goto room by setting htmx redirect header
 	w.Header().Set("HX-Redirect", "/room/"+rid)
 	w.WriteHeader(http.StatusOK)
@@ -58,7 +63,9 @@ func (s *service) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// add user to uid set
-	h.uids[user.ID] = true
+	client := newClient(w, r, user.ID, h)
+	h.register <- client
+
 	// goto room
 	w.Header().Set("HX-Redirect", "/room/"+rid)
 	w.WriteHeader(http.StatusOK)
@@ -67,8 +74,17 @@ func (s *service) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
 func (s *service) handleGotoRoom(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
 	rid := chi.URLParam(r, "rid")
-	// todo: s.hubs[rid] might be nil
-	if _, ok := s.hubs[rid].uids[user.ID]; !ok {
+	// room does not exists
+	h, ok := s.hubs[rid]
+	fmt.Println(h)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Room does not exists"))
+		return
+	}
+	// user is not in the room
+	fmt.Println(h.clients)
+	if _, ok := h.clients[user.ID]; !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("User does not have access to the room"))
 		return
@@ -79,39 +95,42 @@ func (s *service) handleGotoRoom(w http.ResponseWriter, r *http.Request) {
 
 // ws connection
 func (s *service) serveWs(w http.ResponseWriter, r *http.Request) {
+	user := r.Context().Value("user").(*auth.UserContext)
 	rid := chi.URLParam(r, "rid")
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-		return
-	}
 	// does hub exists
-	_, ok := s.hubs[rid]
+	h, ok := s.hubs[rid]
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Something went wrong"))
+	}
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
 	}
-	// if so, register client
-	client := newClient(s.hubs[rid].h, conn)
-	client.hub.register <- client
-	// Allow collection of memory referenced by the caller by doing all work in
-	// new goroutines.
-	go client.writePump()
-	go client.readPump()
+	client, ok := h.clients[user.ID]
+	client.setConn(conn)
+	if ok {
+		go client.writePump()
+		go client.readPump()
+	} else {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Something went wrong"))
+		return
+	}
 }
 
 // todo: everyone in the room can delete rooms right now, which is bad
 func (s *service) handleDeleteRoom(w http.ResponseWriter, r *http.Request) {
 	rid := chi.URLParam(r, "rid")
-	cs := s.hubs[rid].h.clients
+	cs := s.hubs[rid].clients
 
-	for c := range cs {
+	for _, c := range cs {
 		c.hub.unregister <- c
 		c.conn.Close()
 	}
 
-    // todo: i should not need this i only i had not created extra uid set =))
+    s.hubs[rid].close <- true
 	delete(s.hubs, rid)
 
 	w.Header().Set("HX-Redirect", "/dashboard")

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"html/template"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -41,6 +42,8 @@ var upgrader = websocket.Upgrader{
 
 // client is a middleman between the websocket connection and the hub.
 type client struct {
+	uid string
+
 	hub *hub
 
 	// The websocket connection.
@@ -50,12 +53,16 @@ type client struct {
 	send chan []byte
 }
 
-func newClient(hub *hub, conn *websocket.Conn) *client {
+func newClient(w http.ResponseWriter, r *http.Request, uid string, hub *hub) *client {
 	return &client{
+		uid:  uid,
 		hub:  hub,
-		conn: conn,
 		send: make(chan []byte, 256),
 	}
+}
+
+func (c *client) setConn(conn *websocket.Conn) {
+	c.conn = conn
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -65,7 +72,6 @@ func newClient(hub *hub, conn *websocket.Conn) *client {
 // reads from this goroutine.
 func (c *client) readPump() {
 	defer func() {
-		c.hub.unregister <- c
 		c.conn.Close()
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
