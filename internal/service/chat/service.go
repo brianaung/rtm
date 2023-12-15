@@ -34,11 +34,12 @@ func (s *service) Routes() {
 		r.Get("/dashboard", s.handleDashboard)
 		r.Post("/create", s.handleCreateRoom)
 		r.Post("/join", s.handleJoinRoom)
-		r.Get("/room/{roomid}", s.handleGotoRoom)
+		r.Get("/room/{rid}", s.handleGotoRoom)
+		r.Get("/delete/{rid}", s.handleDeleteRoom)
 
 		// todo: unregister route?
 
 		// serve ws connection
-		r.Get("/ws/chat/{roomid}", s.serveWs)
+		r.Get("/ws/chat/{rid}", s.serveWs)
 	})
 }

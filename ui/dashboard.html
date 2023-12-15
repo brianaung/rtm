@@ -12,11 +12,11 @@
     </ul>
 
     <form hx-post="/create" hx-trigger="submit" hx-swap="none">
-        <input id="roomid" name="roomid" rows="1" cols="20" placeholder="Enter your room name" />
+        <input id="create-room" name="rid" rows="1" cols="20" placeholder="Enter your room name" />
         <input type="submit" value="Create Room" />
     </form>
     <form hx-post="/join" hx-trigger="submit" hx-swap="none">
-        <input id="roomid" name="roomid" rows="1" cols="20" placeholder="Enter your room name" />
+        <input id="join-room" name="rid" rows="1" cols="20" placeholder="Enter your room name" />
         <input type="submit" value="Join Room" />
     </form>
 </article>
