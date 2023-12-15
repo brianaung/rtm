@@ -1,7 +1,6 @@
 package chat
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/brianaung/rtm/internal/auth"
@@ -76,14 +75,12 @@ func (s *service) handleGotoRoom(w http.ResponseWriter, r *http.Request) {
 	rid := chi.URLParam(r, "rid")
 	// room does not exists
 	h, ok := s.hubs[rid]
-	fmt.Println(h)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Room does not exists"))
 		return
 	}
 	// user is not in the room
-	fmt.Println(h.clients)
 	if _, ok := h.clients[user.ID]; !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("User does not have access to the room"))
@@ -127,7 +124,6 @@ func (s *service) handleDeleteRoom(w http.ResponseWriter, r *http.Request) {
 
 	for _, c := range cs {
 		c.hub.unregister <- c
-		c.conn.Close()
 	}
 
     s.hubs[rid].close <- true
