@@ -1,0 +1,15 @@
+{{define "content"}}
+<article>
+    <h1>{{.RoomId}}</h1>
+    <div hx-ext="ws" ws-connect="/ws/chat/{{.RoomId}}" ws-target="#{{.RoomId}}-log">
+        <div id="{{.RoomId}}-log" hx-swap-oob="beforeend">log:</div>
+        <form id="{{.RoomId}}" ws-send>
+            <input type="text" name="msg" size="64" autofocus />
+            <input type="submit" value="Send" />
+        </form>
+    </div>
+    <button hx-get="/delete/{{.RoomId}}">
+        Delete Room
+    </button>
+</article>
+{{end}}

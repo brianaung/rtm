@@ -4,8 +4,10 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/brianaung/rtm/internal/auth"
 	"github.com/brianaung/rtm/internal/db"
-	"github.com/brianaung/rtm/internal/user"
+	"github.com/brianaung/rtm/internal/service/chat"
+	"github.com/brianaung/rtm/internal/service/user"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -30,17 +32,23 @@ func main() {
 		MaxAge:           300,
 	}))
 
+	// setup db
 	dbpool, err := db.Init()
 	if err != nil {
 		log.Fatal("Error initialising db")
 	}
 	defer dbpool.Close()
 
+	// setup auth
+	userauth := auth.Init()
+
 	// inject dependencies to services
-	userService := user.NewService(r, dbpool.Get())
+	userService := user.NewService(r, dbpool.Get(), userauth)
+	chatService := chat.NewService(r, dbpool.Get(), userauth)
 
 	// start services
 	userService.Routes()
+	chatService.Routes()
 
 	log.Fatal(http.ListenAndServe(":3000", r))
 }

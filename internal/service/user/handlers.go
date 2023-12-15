@@ -8,17 +8,17 @@ import (
 
 func (s *service) handleHome(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusFound)
-	ui.Render(w, nil, "landing")
+	ui.RenderPage(w, nil, "landing")
 }
 
 func (s *service) handleGetLoginForm(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusFound)
-	ui.Render(w, nil, "loginForm")
+    ui.RenderComponent(w, nil, "login-form")
 }
 
 func (s *service) handleGetSignupForm(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusFound)
-	ui.Render(w, nil, "signupForm")
+    ui.RenderComponent(w, nil, "signup-form")
 }
 
 /* ================================================ */
@@ -34,8 +34,8 @@ func (s *service) handleSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hashedPassword, _ := hashAndSalt(password)
-	u := &user{Username: username, Email: email, Password: hashedPassword}
+	hashedPassword, _ := s.userauth.HashAndSalt(password)
+	u := &User{Username: username, Email: email, Password: hashedPassword}
 	u, err := addUser(r.Context(), s.db, u)
 	// res, err := json.Marshal(u)
 	if err != nil {
@@ -45,7 +45,7 @@ func (s *service) handleSignup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	claims := map[string]interface{}{"id": u.ID, "username": u.Username, "email": u.Email}
-	setTokenCookie(w, s.ja, claims)
+	s.userauth.SetTokenCookie(w, claims)
 
 	w.Header().Set("HX-Redirect", "/dashboard")
 	w.WriteHeader(http.StatusOK)
@@ -60,14 +60,14 @@ func (s *service) handleLogin(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("user not found"))
 		return
 	}
-	err = checkPassword(u.Password, password)
+	err = s.userauth.CheckPassword(u.Password, password)
 	if err != nil {
 		w.Write([]byte("wrong password"))
 		return
 	}
 
 	claims := map[string]interface{}{"id": u.ID, "username": u.Username, "email": u.Email}
-	setTokenCookie(w, s.ja, claims)
+	s.userauth.SetTokenCookie(w, claims)
 
 	w.Header().Set("HX-Redirect", "/dashboard")
 	w.WriteHeader(http.StatusOK)
@@ -81,9 +81,3 @@ func (s *service) handleLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 /* ================================================ */
-
-func (s *service) handleDashboard(w http.ResponseWriter, r *http.Request) {
-	userData := r.Context().Value("user")
-	w.WriteHeader(http.StatusFound)
-	ui.Render(w, userData, "dashboard")
-}
