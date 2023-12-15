@@ -42,7 +42,7 @@ var upgrader = websocket.Upgrader{
 
 // client is a middleman between the websocket connection and the hub.
 type client struct {
-	uid string
+	rid string
 
 	hub *hub
 
@@ -53,11 +53,11 @@ type client struct {
 	send chan []byte
 }
 
-func newClient(w http.ResponseWriter, r *http.Request, uid string, hub *hub) *client {
+func newClient(w http.ResponseWriter, r *http.Request, hub *hub, rid string) *client {
 	return &client{
-		uid:  uid,
 		hub:  hub,
 		send: make(chan []byte, 256),
+		rid:  rid,
 	}
 }
 
@@ -78,15 +78,15 @@ func (c *client) readPump() {
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
-		_, message, err := c.conn.ReadMessage()
+		_, m, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error: %v", err)
 			}
 			break
 		}
-		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.hub.broadcast <- message
+		m = bytes.TrimSpace(bytes.Replace(m, newline, space, -1))
+		c.hub.broadcast <- &message{data: m, rid: c.rid}
 	}
 }
 

@@ -11,11 +11,14 @@ type service struct {
 	r        *chi.Mux
 	db       *pgxpool.Pool
 	userauth *auth.Auth
-	hubs     map[string]*hub // { "hubName" : { hub, uids set }
+    hub *hub
 }
 
 func NewService(r *chi.Mux, db *pgxpool.Pool, userauth *auth.Auth) (s *service) {
-	s = &service{r: r, db: db, userauth: userauth, hubs: make(map[string]*hub)}
+    // Note: it can scale by injecting multiple hubs (each handling a set of chat rooms)
+	h := newHub()
+    go h.run()
+    s = &service{r: r, db: db, userauth: userauth, hub: h}
 	return
 }
 
@@ -28,13 +31,13 @@ func (s *service) Routes() {
 
 		r.Get("/dashboard", s.handleDashboard)
 		r.Post("/create", s.handleCreateRoom)
-		r.Post("/join", s.handleJoinRoom)
-		r.Get("/room/{rid}", s.handleGotoRoom)
-		r.Get("/delete/{rid}", s.handleDeleteRoom)
+		//r.Post("/join", s.handleJoinRoom)
+		//r.Get("/room/{rid}", s.handleGotoRoom)
+		//r.Get("/delete/{rid}", s.handleDeleteRoom)
 
 		// todo: unregister route?
 
 		// serve ws connection
-		r.Get("/ws/chat/{rid}", s.serveWs)
+		//r.Get("/ws/chat/{rid}", s.serveWs)
 	})
 }

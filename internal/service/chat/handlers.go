@@ -1,19 +1,20 @@
 package chat
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/brianaung/rtm/internal/auth"
 	"github.com/brianaung/rtm/ui"
-	"github.com/go-chi/chi/v5"
+	// "github.com/go-chi/chi/v5"
 )
 
 func (s *service) handleDashboard(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
 	// append room if user is inside
 	rids := make([]string, 0)
-	for rid := range s.hubs {
-		if _, ok := s.hubs[rid].clients[user.ID]; ok {
+	for rid, room := range s.hub.rooms {
+		if _, ok := room[user.ID]; ok {
 			rids = append(rids, rid)
 		}
 	}
@@ -33,24 +34,27 @@ func (s *service) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
 	rid := r.FormValue("rid")
 	// room name should be unique (todo: should i use uuid?)
-	if _, ok := s.hubs[rid]; ok {
+	if _, ok := s.hub.rooms[rid]; ok {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Room already exists"))
 		return
 	}
 	// setup the hub (room)
-	h := newHub()
-	s.hubs[rid] = h
-	go h.run()
 
-	client := newClient(w, r, user.ID, h)
-	h.register <- client
+    fmt.Println("ROOMS:",s.hub.rooms)
+
+	c := newClient(w, r, s.hub, rid)
+	s.hub.rooms[rid] = make(map[string]*client)
+    s.hub.rooms[rid][user.ID] = c
+    s.hub.register <- &sub{rid: rid, uid: user.ID, client: c}
 
 	// goto room by setting htmx redirect header
-	w.Header().Set("HX-Redirect", "/room/"+rid)
+	//w.Header().Set("HX-Redirect", "/room/"+rid)
+	w.Header().Set("HX-Redirect", "/dashboard")
 	w.WriteHeader(http.StatusOK)
 }
 
+/*
 func (s *service) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
 	rid := r.FormValue("rid")
@@ -69,6 +73,7 @@ func (s *service) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("HX-Redirect", "/room/"+rid)
 	w.WriteHeader(http.StatusOK)
 }
+*/
 
 func (s *service) handleGotoRoom(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
@@ -90,6 +95,7 @@ func (s *service) handleGotoRoom(w http.ResponseWriter, r *http.Request) {
 	ui.RenderPage(w, struct{ RoomId string }{RoomId: rid}, "chatroom")
 }
 
+/*
 // ws connection
 func (s *service) serveWs(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
@@ -135,3 +141,4 @@ func (s *service) handleDeleteRoom(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("HX-Redirect", "/dashboard")
 	w.WriteHeader(http.StatusOK)
 }
+*/

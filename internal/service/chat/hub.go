@@ -1,40 +1,55 @@
 package chat
 
 type hub struct {
-	clients    map[string]*client // registered clients
-	broadcast  chan []byte        // inbound messsages from the client
-	register   chan *client       // register requests from the client
-	unregister chan *client       // unregister requests from the client
-	quit      chan bool
+	// clients    map[string]*client // registered clients
+	rooms      map[string]map[string]*client // rooms[rid][uid] = *client
+	broadcast  chan *message                  // inbound messsages from the client
+	register   chan *sub                     // register requests from the client
+	unregister chan *sub                     // unregister requests from the client
+	quit       chan bool
+}
+
+type sub struct {
+	rid    string
+	uid    string
+	client *client
+}
+
+type message struct {
+	data []byte
+	rid  string
 }
 
 func newHub() *hub {
 	return &hub{
-		clients:    make(map[string]*client),
-		broadcast:  make(chan []byte),
-		register:   make(chan *client),
-		unregister: make(chan *client),
-		quit:      make(chan bool),
+		//clients:    make(map[string]*client),
+		rooms:      make(map[string]map[string]*client),
+		broadcast:  make(chan *message),
+		register:   make(chan *sub),
+		unregister: make(chan *sub),
+		quit:       make(chan bool),
 	}
 }
 
 func (h *hub) run() {
 	for {
 		select {
-		case client := <-h.register:
+		case sub := <-h.register:
 			// register client to the hub
-			h.clients[client.uid] = client
-		case client := <-h.unregister:
-			if _, ok := h.clients[client.uid]; ok {
-				delete(h.clients, client.uid)
-				close(client.send)
+			// h.clients[client.uid] = client
+			h.rooms[sub.rid][sub.uid] = sub.client
+		case sub := <-h.unregister:
+			if _, ok := h.rooms[sub.rid][sub.uid]; ok {
+				delete(h.rooms[sub.rid], sub.uid)
+				close(sub.client.send)
 			}
-		case message := <-h.broadcast:
-			for uid, client := range h.clients {
+		case m := <-h.broadcast:
+            room := h.rooms[m.rid]
+			for uid, client := range room {
 				select {
-				case client.send <- message:
+				case client.send <- m.data:
 				default:
-					delete(h.clients, uid)
+					delete(room, uid)
 					close(client.send)
 				}
 			}
