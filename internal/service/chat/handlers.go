@@ -73,7 +73,7 @@ func (s *service) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 func (s *service) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
 	rid := r.FormValue("rid")
-	hs, ok := s.hubs[rid]
+	h, ok := s.hubs[rid]
 	// check if room actually exists
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
@@ -81,7 +81,7 @@ func (s *service) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// add user to uid set
-	hs.uids[user.ID] = true
+	h.uids[user.ID] = true
 	// goto room
 	w.Header().Set("HX-Redirect", "/room/"+rid)
 	w.WriteHeader(http.StatusOK)
