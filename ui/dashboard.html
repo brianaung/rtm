@@ -6,16 +6,16 @@
 
     <p>Your active rooms:</p>
     <ul>
-        {{range $val := .Roomids}}
-        <li><a href="/dashboard/room/{{$val}}">{{$val}}</a></li>
+        {{range $val := .Rids}}
+        <li><a href="/room/{{$val}}">{{$val}}</a></li>
         {{end}}
     </ul>
 
-    <form hx-post="/dashboard/create" hx-trigger="submit" hx-swap="none">
+    <form hx-post="/create" hx-trigger="submit" hx-swap="none">
         <input id="roomid" name="roomid" rows="1" cols="20" placeholder="Enter your room name" />
         <input type="submit" value="Create Room" />
     </form>
-    <form hx-post="/dashboard/join" hx-trigger="submit" hx-swap="none">
+    <form hx-post="/join" hx-trigger="submit" hx-swap="none">
         <input id="roomid" name="roomid" rows="1" cols="20" placeholder="Enter your room name" />
         <input type="submit" value="Join Room" />
     </form>

@@ -11,12 +11,12 @@ type service struct {
 	r        *chi.Mux
 	db       *pgxpool.Pool
 	userauth *auth.Auth
-	hubs     map[string]*hubdata
+	hubs     map[string]*hubdata // { "hubName" : { hub, uids set }
 }
 
 type hubdata struct {
-    h *hub
-    uids []string
+	h    *hub
+	uids map[string]bool // uids set
 }
 
 func NewService(r *chi.Mux, db *pgxpool.Pool, userauth *auth.Auth) (s *service) {
@@ -31,18 +31,14 @@ func (s *service) Routes() {
 		r.Use(jwtauth.Verifier(s.userauth.GetJA()))
 		r.Use(s.userauth.Authenticator())
 
-		// todo: another auth middleware: user needs to be in the room?
-
-		// todo: route for serving create room form page
-
 		r.Get("/dashboard", s.handleDashboard)
-		r.Post("/dashboard/create", s.handleCreateRoom)
-		r.Post("/dashboard/join", s.handleJoinRoom)
-		r.Get("/dashboard/room/{roomid}", s.handleGotoRoom)
+		r.Post("/create", s.handleCreateRoom)
+		r.Post("/join", s.handleJoinRoom)
+		r.Get("/room/{roomid}", s.handleGotoRoom)
 
 		// todo: unregister route?
 
 		// serve ws connection
-		r.Get("/ws/chat/{roomid}", s.handleServeWs)
+		r.Get("/ws/chat/{roomid}", s.serveWs)
 	})
 }

@@ -1,7 +1,6 @@
 package chat
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/brianaung/rtm/internal/auth"
@@ -10,100 +9,93 @@ import (
 )
 
 func (s *service) handleDashboard(w http.ResponseWriter, r *http.Request) {
-	userData := r.Context().Value("user").(*auth.UserContext)
-	w.WriteHeader(http.StatusFound)
-
-	roomids := make([]string, 0)
+	user := r.Context().Value("user").(*auth.UserContext)
+	// append room if user is inside
+	rids := make([]string, 0)
 	for k := range s.hubs {
-        if contains(s.hubs[k].uids, userData.ID) {
-		    roomids = append(roomids, k)
-        }
+		if _, ok := s.hubs[k].uids[user.ID]; ok {
+			rids = append(rids, k)
+		}
 	}
-	pagedata := struct {
-		User    *auth.UserContext
-		Roomids []string
+	// data for html
+	data := struct {
+		User *auth.UserContext
+		Rids []string
 	}{
-		User:    userData,
-		Roomids: roomids,
+		User: user,
+		Rids: rids,
 	}
-
-	ui.RenderPage(w, pagedata, "dashboard")
+	w.WriteHeader(http.StatusOK)
+	ui.RenderPage(w, data, "dashboard")
 }
 
 func (s *service) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
-	userData := r.Context().Value("user").(*auth.UserContext)
-
-	roomid := r.FormValue("roomid")
-	if _, ok := s.hubs[roomid]; ok {
-		http.Error(w, "Room already exists", http.StatusInternalServerError)
+	user := r.Context().Value("user").(*auth.UserContext)
+	rid := r.FormValue("roomid")
+	// room name should be unique (todo: should i use uuid?)
+	if _, ok := s.hubs[rid]; ok {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Room already exists"))
 		return
 	}
-
+    // setup the hub (room)
 	h := newHub()
-	s.hubs[roomid] = &hubdata{h: h, uids: []string{userData.ID}}
+	s.hubs[rid] = &hubdata{h: h, uids: map[string]bool{user.ID: true}}
 	go h.run()
-
-	w.Header().Set("HX-Redirect", "/dashboard/room/"+roomid)
+    // goto room by setting htmx redirect header
+	w.Header().Set("HX-Redirect", "/room/"+rid)
 	w.WriteHeader(http.StatusOK)
 }
 
 func (s *service) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
-	userData := r.Context().Value("user").(*auth.UserContext)
-	roomid := r.FormValue("roomid")
-	hs, ok := s.hubs[roomid]
+	user := r.Context().Value("user").(*auth.UserContext)
+	rid := r.FormValue("roomid")
+	hs, ok := s.hubs[rid]
+    // check if room actually exists
 	if !ok {
-		http.Error(w, "Room does not exists", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Room does not exists"))
 		return
 	}
-
-    // append if not already in the room
-    if !contains(hs.uids, userData.ID) {
-	    hs.uids = append(hs.uids, userData.ID)
-    }
-
-	w.Header().Set("HX-Redirect", "/dashboard/room/"+roomid)
+    // add user to uid set
+    hs.uids[user.ID] = true
+    // goto room
+	w.Header().Set("HX-Redirect", "/room/"+rid)
 	w.WriteHeader(http.StatusOK)
 }
 
 func (s *service) handleGotoRoom(w http.ResponseWriter, r *http.Request) {
-	userData := r.Context().Value("user").(*auth.UserContext)
-	roomid := chi.URLParam(r, "roomid")
-	if hinfo, ok := s.hubs[roomid]; !ok || !contains(hinfo.uids, userData.ID) {
-		http.Error(w, "User does not have access to room", http.StatusInternalServerError)
+	user := r.Context().Value("user").(*auth.UserContext)
+	rid := chi.URLParam(r, "roomid")
+    // todo: s.hubs[rid] might be nil
+	if _, ok := s.hubs[rid].uids[user.ID]; !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("User does not have access to the room"))
 		return
 	}
-	ui.RenderPage(w, struct{ RoomId string }{RoomId: roomid}, "chatroom")
+    // otherwise go to chatroom
+	ui.RenderPage(w, struct{ RoomId string }{RoomId: rid}, "chatroom")
 }
 
-func (s *service) handleServeWs(w http.ResponseWriter, r *http.Request) {
-	roomid := chi.URLParam(r, "roomid")
-
+func (s *service) serveWs(w http.ResponseWriter, r *http.Request) {
+	rid := chi.URLParam(r, "roomid")
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
 		return
 	}
-
-	_, ok := s.hubs[roomid]
+    // does hub exists
+	_, ok := s.hubs[rid]
 	if !ok {
-		return
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
 	}
-
-	client := &client{hub: s.hubs[roomid].h, conn: conn, send: make(chan []byte, 256)}
+    // if so, register client
+	client := &client{hub: s.hubs[rid].h, conn: conn, send: make(chan []byte, 256)}
 	client.hub.register <- client
-
 	// Allow collection of memory referenced by the caller by doing all work in
 	// new goroutines.
 	go client.writePump()
 	go client.readPump()
-}
-
-// helpers
-func contains[T comparable](s []T, e T) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
 }
