@@ -8,29 +8,6 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func (s *service) serveWs(w http.ResponseWriter, r *http.Request) {
-	rid := chi.URLParam(r, "rid")
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-		return
-	}
-	// does hub exists
-	_, ok := s.hubs[rid]
-	if !ok {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-	}
-	// if so, register client
-	client := newClient(s.hubs[rid].h, conn)
-	client.hub.register <- client
-	// Allow collection of memory referenced by the caller by doing all work in
-	// new goroutines.
-	go client.writePump()
-	go client.readPump()
-}
-
 func (s *service) handleDashboard(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
 	// append room if user is inside
@@ -96,8 +73,32 @@ func (s *service) handleGotoRoom(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("User does not have access to the room"))
 		return
 	}
-	// otherwise go to chatroom
+	// otherwise go to chatroom (which will establish a ws connection)
 	ui.RenderPage(w, struct{ RoomId string }{RoomId: rid}, "chatroom")
+}
+
+// ws connection
+func (s *service) serveWs(w http.ResponseWriter, r *http.Request) {
+	rid := chi.URLParam(r, "rid")
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	// does hub exists
+	_, ok := s.hubs[rid]
+	if !ok {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+	}
+	// if so, register client
+	client := newClient(s.hubs[rid].h, conn)
+	client.hub.register <- client
+	// Allow collection of memory referenced by the caller by doing all work in
+	// new goroutines.
+	go client.writePump()
+	go client.readPump()
 }
 
 // todo: everyone in the room can delete rooms right now, which is bad
