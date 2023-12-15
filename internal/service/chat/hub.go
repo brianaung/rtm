@@ -5,7 +5,7 @@ type hub struct {
 	broadcast  chan []byte        // inbound messsages from the client
 	register   chan *client       // register requests from the client
 	unregister chan *client       // unregister requests from the client
-	close      chan bool
+	quit      chan bool
 }
 
 func newHub() *hub {
@@ -14,7 +14,7 @@ func newHub() *hub {
 		broadcast:  make(chan []byte),
 		register:   make(chan *client),
 		unregister: make(chan *client),
-		close:      make(chan bool),
+		quit:      make(chan bool),
 	}
 }
 
@@ -38,9 +38,9 @@ func (h *hub) run() {
 					close(client.send)
 				}
 			}
-		case flag := <-h.close:
-			if flag {
-				break
+		case quit := <-h.quit:
+			if quit {
+				return
 			}
 		}
 	}

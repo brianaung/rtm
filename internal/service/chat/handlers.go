@@ -99,11 +99,13 @@ func (s *service) serveWs(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Something went wrong"))
+        return
 	}
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
+        return
 	}
 	client, ok := h.clients[user.ID]
 	client.setConn(conn)
@@ -120,13 +122,14 @@ func (s *service) serveWs(w http.ResponseWriter, r *http.Request) {
 // todo: everyone in the room can delete rooms right now, which is bad
 func (s *service) handleDeleteRoom(w http.ResponseWriter, r *http.Request) {
 	rid := chi.URLParam(r, "rid")
+    // todo: vulnerable to nil pointer dereference
 	cs := s.hubs[rid].clients
 
 	for _, c := range cs {
 		c.hub.unregister <- c
 	}
 
-    s.hubs[rid].close <- true
+    s.hubs[rid].quit <- true
 	delete(s.hubs, rid)
 
 	w.Header().Set("HX-Redirect", "/dashboard")
