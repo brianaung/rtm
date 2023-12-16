@@ -11,19 +11,19 @@ type service struct {
 	r        *chi.Mux
 	db       *pgxpool.Pool
 	userauth *auth.Auth
-	hubs     map[string]*hubdata // { "hubName" : { hub, uids set }
-}
-
-type hubdata struct {
-	h    *hub
-	uids map[string]bool // uids set
+	hub      *hub
 }
 
 func NewService(r *chi.Mux, db *pgxpool.Pool, userauth *auth.Auth) (s *service) {
-	s = &service{r: r, db: db, userauth: userauth, hubs: make(map[string]*hubdata)}
+	h := newHub()
+	go h.run()
+	s = &service{r: r, db: db, userauth: userauth, hub: h}
 	return
 }
 
+// Routes creates routes for listening to requests.
+//
+// It handles the protected routes for different chat services.
 func (s *service) Routes() {
 	// protected
 	s.r.Group(func(r chi.Router) {
@@ -36,10 +36,9 @@ func (s *service) Routes() {
 		r.Post("/join", s.handleJoinRoom)
 		r.Get("/room/{rid}", s.handleGotoRoom)
 		r.Get("/delete/{rid}", s.handleDeleteRoom)
-
 		// todo: unregister route?
 
-		// serve ws connection
+		// ws connection
 		r.Get("/ws/chat/{rid}", s.serveWs)
 	})
 }

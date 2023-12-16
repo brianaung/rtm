@@ -18,13 +18,10 @@ type Message struct {
 const (
 	// Time allowed to write a message to the peer.
 	writeWait = 10 * time.Second
-
 	// Time allowed to read the next pong message from the peer.
 	pongWait = 60 * time.Second
-
 	// Send pings to peer with this period. Must be less than pongWait.
 	pingPeriod = (pongWait * 9) / 10
-
 	// Maximum message size allowed from peer.
 	maxMessageSize = 512
 )
@@ -42,12 +39,22 @@ var upgrader = websocket.Upgrader{
 // client is a middleman between the websocket connection and the hub.
 type client struct {
 	hub *hub
-
+	rid string
+	uid string
 	// The websocket connection.
 	conn *websocket.Conn
-
 	// Buffered channel of outbound messages.
 	send chan []byte
+}
+
+func newClient(hub *hub, rid string, uid string, conn *websocket.Conn) *client {
+	return &client{
+		hub:  hub,
+		rid:  rid,
+		uid:  uid,
+		send: make(chan []byte, 256),
+		conn: conn,
+	}
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -57,22 +64,22 @@ type client struct {
 // reads from this goroutine.
 func (c *client) readPump() {
 	defer func() {
-		c.hub.unregister <- c
 		c.conn.Close()
+		c.hub.unregister <- c
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
-		_, message, err := c.conn.ReadMessage()
+		_, m, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error: %v", err)
 			}
 			break
 		}
-		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.hub.broadcast <- message
+		m = bytes.TrimSpace(bytes.Replace(m, newline, space, -1))
+		c.hub.broadcast <- &message{data: m, rid: c.rid}
 	}
 }
 
