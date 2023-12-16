@@ -16,7 +16,6 @@ type member struct {
 }
 
 type message struct {
-	uid  string
 	rid  string
 	data []byte
 }
@@ -34,19 +33,20 @@ func newHub() *hub {
 func (h *hub) run() {
 	for {
 		select {
-		// register, unregister route should only be for client/conn, not for removing user
-		// todo: another route for removing user as well(i.e. remove all conn for that user)?
+		// register, unregister chan is only for client/conn, not for removing entire user
+		// todo: another chan for removing user
 		case c := <-h.register:
-			// register client to the hub
-			// Note: pls make sure spaces are allocated before sending to this chan (no nil dereference)
+			// register client to the member in the hub
+			// Note: make sure spaces are allocated before sending to this chan
 			h.rooms[c.rid][c.uid].clients[c] = true
 		case c := <-h.unregister:
-			// remove client from map, and close the send channel
+			// remove client from clients map, and close the send channel
 			if _, ok := h.rooms[c.rid][c.uid].clients[c]; ok {
 				delete(h.rooms[c.rid][c.uid].clients, c)
 				close(c.send)
 			}
 		case m := <-h.broadcast:
+            // broadcast messages to every client in the room
 			room := h.rooms[m.rid]
 			for _, member := range room {
 				for c := range member.clients {
