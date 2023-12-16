@@ -21,10 +21,13 @@ func NewService(r *chi.Mux, db *pgxpool.Pool, userauth *auth.Auth) (s *service) 
 	return
 }
 
+// Routes creates routes for listening to requests.
+//
+// It handles the protected routes for different chat services.
 func (s *service) Routes() {
 	// protected
 	s.r.Group(func(r chi.Router) {
-		// auth middlewares
+		// middlewares
 		r.Use(jwtauth.Verifier(s.userauth.GetJA()))
 		r.Use(s.userauth.Authenticator())
 
@@ -35,7 +38,7 @@ func (s *service) Routes() {
 		r.Get("/delete/{rid}", s.handleDeleteRoom)
 		// todo: unregister route?
 
-		// serve ws connection
+		// ws connection
 		r.Get("/ws/chat/{rid}", s.serveWs)
 	})
 }
