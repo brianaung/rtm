@@ -39,7 +39,7 @@ func (s *service) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// add user to room
-	c := newClient(w, r, s.hub, rid)
+	c := newClient(s.hub, rid)
 	s.hub.rooms[rid] = make(map[string]*client)
 	s.hub.rooms[rid][user.ID] = c
 	s.hub.register <- &sub{rid: rid, uid: user.ID, client: c}
@@ -60,7 +60,7 @@ func (s *service) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// add user to room
-	c := newClient(w, r, s.hub, rid)
+	c := newClient(s.hub, rid)
 	room[user.ID] = c
 	s.hub.register <- &sub{rid: rid, uid: user.ID, client: c}
 	// goto room
@@ -123,14 +123,14 @@ func (s *service) serveWs(w http.ResponseWriter, r *http.Request) {
 func (s *service) handleDeleteRoom(w http.ResponseWriter, r *http.Request) {
 	rid := chi.URLParam(r, "rid")
     // todo: vulnerable to nil pointer dereference
-	cs := s.hubs[rid].clients
+	cs := s.hub.rooms[rid]
 
-	for _, c := range cs {
-		c.hub.unregister <- c
+	for uid, c := range cs {
+		c.hub.unregister <- &sub{rid, uid, c}
+        c.conn.Close()
 	}
 
-    s.hubs[rid].quit <- true
-	delete(s.hubs, rid)
+	delete(s.hub.rooms, rid)
 
 	w.Header().Set("HX-Redirect", "/dashboard")
 	w.WriteHeader(http.StatusOK)

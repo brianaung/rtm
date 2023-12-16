@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"html/template"
 	"log"
-	"net/http"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -42,22 +41,19 @@ var upgrader = websocket.Upgrader{
 
 // client is a middleman between the websocket connection and the hub.
 type client struct {
-	rid string
-
 	hub *hub
-
+	rid string
 	// The websocket connection.
 	conn *websocket.Conn
-
 	// Buffered channel of outbound messages.
 	send chan []byte
 }
 
-func newClient(w http.ResponseWriter, r *http.Request, hub *hub, rid string) *client {
+func newClient(hub *hub, rid string) *client {
 	return &client{
 		hub:  hub,
-		send: make(chan []byte, 256),
 		rid:  rid,
+		send: make(chan []byte, 256),
 	}
 }
 

@@ -22,7 +22,6 @@ type message struct {
 
 func newHub() *hub {
 	return &hub{
-		//clients:    make(map[string]*client),
 		rooms:      make(map[string]map[string]*client),
 		broadcast:  make(chan *message),
 		register:   make(chan *sub),
@@ -36,7 +35,6 @@ func (h *hub) run() {
 		select {
 		case sub := <-h.register:
 			// register client to the hub
-			// h.clients[client.uid] = client
 			h.rooms[sub.rid][sub.uid] = sub.client
 		case sub := <-h.unregister:
 			if _, ok := h.rooms[sub.rid][sub.uid]; ok {
