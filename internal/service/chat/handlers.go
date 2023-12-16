@@ -118,7 +118,6 @@ func (s *service) serveWs(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/*
 // todo: everyone in the room can delete rooms right now, which is bad
 func (s *service) handleDeleteRoom(w http.ResponseWriter, r *http.Request) {
 	rid := chi.URLParam(r, "rid")
@@ -135,4 +134,3 @@ func (s *service) handleDeleteRoom(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("HX-Redirect", "/dashboard")
 	w.WriteHeader(http.StatusOK)
 }
-*/
