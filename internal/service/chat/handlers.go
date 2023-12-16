@@ -38,11 +38,9 @@ func (s *service) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Room already exists"))
 		return
 	}
-	// allocate space for the room
-	s.hub.rooms[rid] = make(map[string]*client)
-	// the room will have one client at least (initially creator)
-	c := newClient(s.hub, rid)
-	s.hub.register <- &sub{rid: rid, uid: user.ID, client: c}
+	// allocate space and add creator to the room
+	s.hub.rooms[rid] = make(map[string]*member)
+    s.hub.rooms[rid][user.ID] = &member{uid: user.ID, clients: make(map[*client]bool)}
 	// goto room
 	w.Header().Set("HX-Redirect", "/room/"+rid)
 	w.WriteHeader(http.StatusOK)
@@ -58,8 +56,7 @@ func (s *service) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// add user to room
-	c := newClient(s.hub, rid)
-	s.hub.register <- &sub{rid: rid, uid: user.ID, client: c}
+    s.hub.rooms[rid][user.ID] = &member{uid: user.ID, clients: make(map[*client]bool)}
 	// goto room
 	w.Header().Set("HX-Redirect", "/room/"+rid)
 	w.WriteHeader(http.StatusOK)
@@ -95,6 +92,13 @@ func (s *service) serveWs(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Something went wrong"))
 		return
 	}
+	// check if member is in room
+	member, ok := room[user.ID]
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("User does not have access to the room"))
+		return
+	}
 	// create a new connection for this session
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -102,14 +106,14 @@ func (s *service) serveWs(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-    // set conn to current client and run goroutines
-	if c, ok := room[user.ID]; ok {
-		room[user.ID].setConn(conn)
-		go c.writePump()
-		go c.readPump()
-	}
+	c := newClient(s.hub, rid, user.ID, conn)
+	member.clients[c] = true
+    s.hub.register <- c
+	go c.writePump()
+	go c.readPump()
 }
 
+/*
 // todo: everyone in the room can delete rooms right now, which is bad
 func (s *service) handleDeleteRoom(w http.ResponseWriter, r *http.Request) {
 	rid := chi.URLParam(r, "rid")
@@ -126,3 +130,4 @@ func (s *service) handleDeleteRoom(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("HX-Redirect", "/dashboard")
 	w.WriteHeader(http.StatusOK)
 }
+*/

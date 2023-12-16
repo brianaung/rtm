@@ -43,22 +43,21 @@ var upgrader = websocket.Upgrader{
 type client struct {
 	hub *hub
 	rid string
+	uid string
 	// The websocket connection.
 	conn *websocket.Conn
 	// Buffered channel of outbound messages.
 	send chan []byte
 }
 
-func newClient(hub *hub, rid string) *client {
+func newClient(hub *hub, rid string, uid string, conn *websocket.Conn) *client {
 	return &client{
 		hub:  hub,
 		rid:  rid,
+		uid:  uid,
 		send: make(chan []byte, 256),
+        conn: conn,
 	}
-}
-
-func (c *client) setConn(conn *websocket.Conn) {
-	c.conn = conn
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -69,6 +68,7 @@ func (c *client) setConn(conn *websocket.Conn) {
 func (c *client) readPump() {
 	defer func() {
 		c.conn.Close()
+        c.hub.unregister <- c
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
@@ -82,7 +82,7 @@ func (c *client) readPump() {
 			break
 		}
 		m = bytes.TrimSpace(bytes.Replace(m, newline, space, -1))
-		c.hub.broadcast <- &message{data: m, rid: c.rid}
+        c.hub.broadcast <- &message{data: m, rid: c.rid, uid: c.uid}
 	}
 }
 
