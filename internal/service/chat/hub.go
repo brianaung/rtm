@@ -3,7 +3,7 @@ package chat
 type hub struct {
 	// clients    map[string]*client // registered clients
 	rooms      map[string]map[string]*client // rooms[rid][uid] = *client
-	broadcast  chan *message                  // inbound messsages from the client
+	broadcast  chan *message                 // inbound messsages from the client
 	register   chan *sub                     // register requests from the client
 	unregister chan *sub                     // unregister requests from the client
 	quit       chan bool
@@ -16,8 +16,8 @@ type sub struct {
 }
 
 type message struct {
-	data []byte
 	rid  string
+	data []byte
 }
 
 func newHub() *hub {
@@ -44,7 +44,7 @@ func (h *hub) run() {
 				close(sub.client.send)
 			}
 		case m := <-h.broadcast:
-            room := h.rooms[m.rid]
+			room := h.rooms[m.rid]
 			for uid, client := range room {
 				select {
 				case client.send <- m.data:

@@ -1,12 +1,11 @@
 package chat
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/brianaung/rtm/internal/auth"
 	"github.com/brianaung/rtm/ui"
-	// "github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5"
 )
 
 func (s *service) handleDashboard(w http.ResponseWriter, r *http.Request) {
@@ -39,54 +38,48 @@ func (s *service) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Room already exists"))
 		return
 	}
-	// setup the hub (room)
-
-    fmt.Println("ROOMS:",s.hub.rooms)
-
+	// add user to room
 	c := newClient(w, r, s.hub, rid)
 	s.hub.rooms[rid] = make(map[string]*client)
-    s.hub.rooms[rid][user.ID] = c
-    s.hub.register <- &sub{rid: rid, uid: user.ID, client: c}
+	s.hub.rooms[rid][user.ID] = c
+	s.hub.register <- &sub{rid: rid, uid: user.ID, client: c}
 
 	// goto room by setting htmx redirect header
-	//w.Header().Set("HX-Redirect", "/room/"+rid)
-	w.Header().Set("HX-Redirect", "/dashboard")
+	w.Header().Set("HX-Redirect", "/room/"+rid)
 	w.WriteHeader(http.StatusOK)
 }
 
-/*
 func (s *service) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
 	rid := r.FormValue("rid")
-	h, ok := s.hubs[rid]
+	room, ok := s.hub.rooms[rid]
 	// check if room actually exists
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Room does not exists"))
 		return
 	}
-	// add user to uid set
-	client := newClient(w, r, user.ID, h)
-	h.register <- client
-
+	// add user to room
+	c := newClient(w, r, s.hub, rid)
+	room[user.ID] = c
+	s.hub.register <- &sub{rid: rid, uid: user.ID, client: c}
 	// goto room
 	w.Header().Set("HX-Redirect", "/room/"+rid)
 	w.WriteHeader(http.StatusOK)
 }
-*/
 
 func (s *service) handleGotoRoom(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
 	rid := chi.URLParam(r, "rid")
 	// room does not exists
-	h, ok := s.hubs[rid]
+	room, ok := s.hub.rooms[rid]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Room does not exists"))
 		return
 	}
 	// user is not in the room
-	if _, ok := h.clients[user.ID]; !ok {
+	if _, ok := room[user.ID]; !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("User does not have access to the room"))
 		return
@@ -95,25 +88,25 @@ func (s *service) handleGotoRoom(w http.ResponseWriter, r *http.Request) {
 	ui.RenderPage(w, struct{ RoomId string }{RoomId: rid}, "chatroom")
 }
 
-/*
 // ws connection
 func (s *service) serveWs(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
 	rid := chi.URLParam(r, "rid")
-	// does hub exists
-	h, ok := s.hubs[rid]
+	// does room exists
+	room, ok := s.hub.rooms[rid]
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Something went wrong"))
-        return
+		return
 	}
+
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
-        return
+		return
 	}
-	client, ok := h.clients[user.ID]
+	client, ok := room[user.ID]
 	client.setConn(conn)
 	if ok {
 		go client.writePump()
@@ -125,6 +118,7 @@ func (s *service) serveWs(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+/*
 // todo: everyone in the room can delete rooms right now, which is bad
 func (s *service) handleDeleteRoom(w http.ResponseWriter, r *http.Request) {
 	rid := chi.URLParam(r, "rid")
