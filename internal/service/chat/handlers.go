@@ -38,13 +38,12 @@ func (s *service) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Room already exists"))
 		return
 	}
-	// add user to room
-	c := newClient(s.hub, rid)
+	// allocate space for the room
 	s.hub.rooms[rid] = make(map[string]*client)
-	s.hub.rooms[rid][user.ID] = c
+	// the room will have one client at least (initially creator)
+	c := newClient(s.hub, rid)
 	s.hub.register <- &sub{rid: rid, uid: user.ID, client: c}
-
-	// goto room by setting htmx redirect header
+	// goto room
 	w.Header().Set("HX-Redirect", "/room/"+rid)
 	w.WriteHeader(http.StatusOK)
 }
@@ -52,16 +51,14 @@ func (s *service) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 func (s *service) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
 	rid := r.FormValue("rid")
-	room, ok := s.hub.rooms[rid]
-	// check if room actually exists
-	if !ok {
+	// check if room exists
+	if _, ok := s.hub.rooms[rid]; !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Room does not exists"))
 		return
 	}
 	// add user to room
 	c := newClient(s.hub, rid)
-	room[user.ID] = c
 	s.hub.register <- &sub{rid: rid, uid: user.ID, client: c}
 	// goto room
 	w.Header().Set("HX-Redirect", "/room/"+rid)
@@ -71,15 +68,14 @@ func (s *service) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
 func (s *service) handleGotoRoom(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
 	rid := chi.URLParam(r, "rid")
-	// room does not exists
-	room, ok := s.hub.rooms[rid]
-	if !ok {
+	// check if room exists
+	if _, ok := s.hub.rooms[rid]; !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Room does not exists"))
 		return
 	}
 	// user is not in the room
-	if _, ok := room[user.ID]; !ok {
+	if _, ok := s.hub.rooms[rid][user.ID]; !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("User does not have access to the room"))
 		return
@@ -92,41 +88,37 @@ func (s *service) handleGotoRoom(w http.ResponseWriter, r *http.Request) {
 func (s *service) serveWs(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
 	rid := chi.URLParam(r, "rid")
-	// does room exists
+	// check if room exists
 	room, ok := s.hub.rooms[rid]
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Something went wrong"))
 		return
 	}
-
+	// create a new connection for this session
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
 		return
 	}
-	client, ok := room[user.ID]
-	client.setConn(conn)
-	if ok {
-		go client.writePump()
-		go client.readPump()
-	} else {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Something went wrong"))
-		return
+    // set conn to current client and run goroutines
+	if c, ok := room[user.ID]; ok {
+		room[user.ID].setConn(conn)
+		go c.writePump()
+		go c.readPump()
 	}
 }
 
 // todo: everyone in the room can delete rooms right now, which is bad
 func (s *service) handleDeleteRoom(w http.ResponseWriter, r *http.Request) {
 	rid := chi.URLParam(r, "rid")
-    // todo: vulnerable to nil pointer dereference
+	// todo: vulnerable to nil pointer dereference
 	cs := s.hub.rooms[rid]
 
 	for uid, c := range cs {
 		c.hub.unregister <- &sub{rid, uid, c}
-        c.conn.Close()
+		c.conn.Close()
 	}
 
 	delete(s.hub.rooms, rid)
