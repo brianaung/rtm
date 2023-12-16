@@ -2,15 +2,15 @@ package chat
 
 type hub struct {
 	rooms      map[string]*room // room: map[string]*member
-	broadcast  chan *message   // inbound messsages from the client
-	register   chan *client    // register requests from the client
-	unregister chan *client    // unregister requests from the client
+	broadcast  chan *message    // inbound messsages from the client
+	register   chan *client     // register requests from the client
+	unregister chan *client     // unregister requests from the client
 	quit       chan bool
 }
 
 type room struct {
-	rid     string
-	rname   string
+	rid   string
+	rname string
 
 	members map[string]*member
 }

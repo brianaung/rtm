@@ -135,23 +135,6 @@ func (s *service) serveWs(w http.ResponseWriter, r *http.Request) {
 	go c.readPump()
 }
 
-// TODO: everyone in the room can delete rooms right now, which is bad
+// TODO: ughhh
 func (s *service) handleDeleteRoom(w http.ResponseWriter, r *http.Request) {
-	rid := chi.URLParam(r, "rid")
-	room, ok := s.hub.rooms[rid]
-	if !ok {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Room does not exists"))
-		return
-	}
-	for uid, member := range room.members {
-		for c := range member.clients {
-			c.hub.unregister <- c
-			c.conn.Close()
-		}
-		delete(room.members, uid)
-	}
-	delete(s.hub.rooms, rid)
-	w.Header().Set("HX-Redirect", "/dashboard")
-	w.WriteHeader(http.StatusOK)
 }

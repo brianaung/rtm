@@ -35,7 +35,7 @@ func (s *service) Routes() {
 		r.Post("/create", s.handleCreateRoom)
 		r.Post("/join", s.handleJoinRoom)
 		r.Get("/room/{rid}", s.handleGotoRoom)
-		r.Get("/delete/{rid}", s.handleDeleteRoom)
+		//r.Get("/delete/{rid}", s.handleDeleteRoom)
 		// todo: unregister route?
 
 		// ws connection
