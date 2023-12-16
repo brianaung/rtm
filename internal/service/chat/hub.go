@@ -1,7 +1,7 @@
 package chat
 
 type hub struct {
-	rooms      map[string]room // rooms[rid][uid] = *client
+	rooms      map[string]room // room: map[string]*member
 	broadcast  chan *message   // inbound messsages from the client
 	register   chan *client    // register requests from the client
 	unregister chan *client    // unregister requests from the client
@@ -41,7 +41,7 @@ func (h *hub) run() {
 			// Note: pls make sure spaces are allocated before sending to this chan (no nil dereference)
 			h.rooms[c.rid][c.uid].clients[c] = true
 		case c := <-h.unregister:
-            // remove client from map, and close the send channel
+			// remove client from map, and close the send channel
 			if _, ok := h.rooms[c.rid][c.uid].clients[c]; ok {
 				delete(h.rooms[c.rid][c.uid].clients, c)
 				close(c.send)

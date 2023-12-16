@@ -40,7 +40,7 @@ func (s *service) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 	}
 	// allocate space and add creator to the room
 	s.hub.rooms[rid] = make(map[string]*member)
-    s.hub.rooms[rid][user.ID] = &member{uid: user.ID, clients: make(map[*client]bool)}
+	s.hub.rooms[rid][user.ID] = &member{uid: user.ID, clients: make(map[*client]bool)}
 	// goto room
 	w.Header().Set("HX-Redirect", "/room/"+rid)
 	w.WriteHeader(http.StatusOK)
@@ -56,7 +56,7 @@ func (s *service) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// add user to room
-    s.hub.rooms[rid][user.ID] = &member{uid: user.ID, clients: make(map[*client]bool)}
+	s.hub.rooms[rid][user.ID] = &member{uid: user.ID, clients: make(map[*client]bool)}
 	// goto room
 	w.Header().Set("HX-Redirect", "/room/"+rid)
 	w.WriteHeader(http.StatusOK)
@@ -108,26 +108,29 @@ func (s *service) serveWs(w http.ResponseWriter, r *http.Request) {
 	}
 	c := newClient(s.hub, rid, user.ID, conn)
 	member.clients[c] = true
-    s.hub.register <- c
+	s.hub.register <- c
 	go c.writePump()
 	go c.readPump()
 }
 
-/*
 // todo: everyone in the room can delete rooms right now, which is bad
 func (s *service) handleDeleteRoom(w http.ResponseWriter, r *http.Request) {
 	rid := chi.URLParam(r, "rid")
-	// todo: vulnerable to nil pointer dereference
-	cs := s.hub.rooms[rid]
-
-	for uid, c := range cs {
-		c.hub.unregister <- &sub{rid, uid, c}
-		c.conn.Close()
+	room, ok := s.hub.rooms[rid]
+	if !ok {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Something went wrong"))
+		return
 	}
-
+	for uid, member := range room {
+		for c := range member.clients {
+			c.hub.unregister <- c
+			c.conn.Close()
+		}
+		delete(room, uid)
+	}
 	delete(s.hub.rooms, rid)
 
 	w.Header().Set("HX-Redirect", "/dashboard")
 	w.WriteHeader(http.StatusOK)
 }
-*/

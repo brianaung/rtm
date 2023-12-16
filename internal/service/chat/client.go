@@ -56,7 +56,7 @@ func newClient(hub *hub, rid string, uid string, conn *websocket.Conn) *client {
 		rid:  rid,
 		uid:  uid,
 		send: make(chan []byte, 256),
-        conn: conn,
+		conn: conn,
 	}
 }
 
@@ -68,7 +68,7 @@ func newClient(hub *hub, rid string, uid string, conn *websocket.Conn) *client {
 func (c *client) readPump() {
 	defer func() {
 		c.conn.Close()
-        c.hub.unregister <- c
+		c.hub.unregister <- c
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
@@ -82,7 +82,7 @@ func (c *client) readPump() {
 			break
 		}
 		m = bytes.TrimSpace(bytes.Replace(m, newline, space, -1))
-        c.hub.broadcast <- &message{data: m, rid: c.rid, uid: c.uid}
+		c.hub.broadcast <- &message{data: m, rid: c.rid, uid: c.uid}
 	}
 }
 
