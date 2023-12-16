@@ -46,9 +46,11 @@ func (h *hub) run() {
 			h.rooms[c.rid].members[c.uid].clients[c] = true
 		case c := <-h.unregister:
 			// remove client from clients map, and close the send channel
-			if _, ok := h.rooms[c.rid].members[c.uid].clients[c]; ok {
-				delete(h.rooms[c.rid].members[c.uid].clients, c)
-				close(c.send)
+			if room, ok := h.rooms[c.rid]; ok {
+				if _, ok := room.members[c.uid].clients[c]; ok {
+					delete(h.rooms[c.rid].members[c.uid].clients, c)
+					close(c.send)
+				}
 			}
 		case m := <-h.broadcast:
 			// broadcast messages to every client in the room

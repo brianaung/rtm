@@ -135,6 +135,20 @@ func (s *service) serveWs(w http.ResponseWriter, r *http.Request) {
 	go c.readPump()
 }
 
-// TODO: ughhh
+// TODO: only allow admin to delete
 func (s *service) handleDeleteRoom(w http.ResponseWriter, r *http.Request) {
+	rid := chi.URLParam(r, "rid")
+	room, ok := s.hub.rooms[rid]
+	if !ok || room.members == nil {
+		return
+	}
+	for _, member := range room.members {
+		for c := range member.clients {
+			s.hub.unregister <- c
+			c.conn.Close()
+		}
+	}
+	delete(s.hub.rooms, rid)
+	w.Header().Set("HX-Redirect", "/dashboard")
+	w.WriteHeader(http.StatusOK)
 }
