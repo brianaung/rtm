@@ -32,9 +32,8 @@ func main() {
 		MaxAge:           300,
 	}))
 
-	// serve files in dist
-	fs := http.FileServer(http.Dir("static"))
-	r.Handle("/static/*", http.StripPrefix("/static/", fs))
+	fs := http.FileServer(http.Dir("dist"))
+	r.Handle("/dist/*", http.StripPrefix("/dist/", fs))
 
 	// setup db
 	dbpool, err := db.Init()

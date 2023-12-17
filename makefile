@@ -16,7 +16,7 @@ clean:
 	rm -rf dist
 
 tailwind:
-	npx tailwindcss -i ./ui/input.css -o ./static/main.css --watch
+	npx tailwindcss -i ./ui/input.css -o ./dist/output.css --watch
 
 up:
 	@goose -dir internal/db/migrations/ postgres "user=${DATABASE_USER} password=${DATABASE_PASSWORD} dbname=${DATABASE_NAME} sslmode=disable" up
