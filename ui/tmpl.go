@@ -5,9 +5,9 @@ import (
 	"net/http"
 )
 
-var landing = template.Must(template.ParseFiles("ui/landing.html", "ui/base.html"))
-var dashboard = template.Must(template.ParseFiles("ui/dashboard.html", "ui/base.html"))
-var chatroom = template.Must(template.ParseFiles("ui/chatroom.html", "ui/base.html"))
+var landing = template.Must(template.ParseFiles("ui/pages/landing.html", "ui/base.html"))
+var dashboard = template.Must(template.ParseFiles("ui/pages/dashboard.html", "ui/base.html"))
+var chatroom = template.Must(template.ParseFiles("ui/pages/chatroom.html", "ui/base.html"))
 
 var ptemplates = map[string]*template.Template{
 	"landing":   landing,
@@ -24,8 +24,8 @@ func RenderPage(w http.ResponseWriter, data interface{}, tmpl string) {
 }
 
 var ctemplates = template.Must(template.ParseFiles(
-	"ui/login-form.html",
-	"ui/signup-form.html",
+	"ui/components/login-form.html",
+	"ui/components/signup-form.html",
 ))
 
 func RenderComponent(w http.ResponseWriter, data interface{}, tmpl string) {
