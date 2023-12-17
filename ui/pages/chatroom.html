@@ -11,11 +11,10 @@
             delete room
         </button>
     </div>
-
-    <section class="flex flex-col justify-end h-96" hx-ext="ws" ws-connect="/ws/chat/{{.Rid}}">
+    <section class="flex flex-col justify-end h-[80vh]" hx-ext="ws" ws-connect="/ws/chat/{{.Rid}}">
         <div class="flex flex-col-reverse max-h-full overflow-y-auto" id="log"></div>
-        <form id="form" ws-send>
-            <input type="text" name="msg" size="64" autofocus />
+        <form id="form" ws-send class="flex justify-between w-full">
+            <input type="text" name="msg" size="64" autofocus class="w-full" />
             <input type="submit" value="Send" />
         </form>
     </section>

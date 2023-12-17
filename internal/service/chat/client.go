@@ -116,7 +116,7 @@ func (c *client) writePump() {
 			json.Unmarshal(message.data, data)
 
 			time := time.Now()
-			formatted := fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02d",
+			formatted := fmt.Sprintf("%d/%02d/%02d %02d:%02d:%02d",
 				time.Year(), time.Month(), time.Day(),
 				time.Hour(), time.Minute(), time.Second())
 
@@ -126,7 +126,8 @@ func (c *client) writePump() {
 				Uname string
 				Msg   string
 				Time  string
-			}{Rid: c.rid, Uname: message.uname, Msg: data.Msg, Time: formatted})
+				Mine  bool
+			}{Rid: c.rid, Uname: message.uname, Msg: data.Msg, Time: formatted, Mine: c.uname == message.uname})
 
 			// Add queued chat messages to the current websocket message.
 			n := len(c.send)
