@@ -128,7 +128,7 @@ func (s *service) serveWs(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	c := newClient(s.hub, rid, user.ID, conn)
+	c := newClient(s.hub, rid, user.ID, user.Username, conn)
 	member.clients[c] = true
 	s.hub.register <- c
 	go c.writePump()

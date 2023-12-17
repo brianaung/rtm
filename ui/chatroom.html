@@ -1,15 +1,16 @@
 {{define "content"}}
 <article>
-    <h1>{{.Rname}}#{{.Rid}}</h1>
-    <div hx-ext="ws" ws-connect="/ws/chat/{{.Rid}}" ws-target="#log-{{.Rid}}">
+    <button hx-get="/delete/{{.Rid}}" hx-swap="none">
+        Delete Room
+    </button>
+    <h1>{{.Rname}}</h1>
+    <p>#{{.Rid}}</p>
+    <section hx-ext="ws" ws-connect="/ws/chat/{{.Rid}}" ws-target="#log-{{.Rid}}">
         <div id="log-{{.Rid}}" hx-swap-oob="beforeend">log:</div>
         <form id="{{.Rid}}" ws-send>
             <input type="text" name="msg" size="64" autofocus />
             <input type="submit" value="Send" />
         </form>
-    </div>
-    <button hx-get="/delete/{{.Rid}}" hx-swap="none">
-        Delete Room
-    </button>
+    </section>
 </article>
 {{end}}

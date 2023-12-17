@@ -3,6 +3,7 @@ package chat
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"log"
 	"time"
@@ -10,7 +11,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type Message struct {
+type msgData struct {
 	Msg     string            `json:"msg"`
 	Headers map[string]string `json:"HEADERS"`
 }
@@ -38,22 +39,24 @@ var upgrader = websocket.Upgrader{
 
 // client is a middleman between the websocket connection and the hub.
 type client struct {
-	hub *hub
-	rid string
-	uid string
+	hub   *hub
+	rid   string
+	uid   string
+	uname string
 	// The websocket connection.
 	conn *websocket.Conn
 	// Buffered channel of outbound messages.
-	send chan []byte
+	send chan *message
 }
 
-func newClient(hub *hub, rid string, uid string, conn *websocket.Conn) *client {
+func newClient(hub *hub, rid string, uid string, uname string, conn *websocket.Conn) *client {
 	return &client{
-		hub:  hub,
-		rid:  rid,
-		uid:  uid,
-		send: make(chan []byte, 256),
-		conn: conn,
+		hub:   hub,
+		rid:   rid,
+		uid:   uid,
+		uname: uname,
+		send:  make(chan *message),
+		conn:  conn,
 	}
 }
 
@@ -79,7 +82,7 @@ func (c *client) readPump() {
 			break
 		}
 		m = bytes.TrimSpace(bytes.Replace(m, newline, space, -1))
-		c.hub.broadcast <- &message{data: m, rid: c.rid}
+		c.hub.broadcast <- &message{data: m, rid: c.rid, uname: c.uname}
 	}
 }
 
@@ -109,23 +112,29 @@ func (c *client) writePump() {
 				return
 			}
 
-			data := Message{}
-			err = json.Unmarshal(message, &data)
-			if err != nil {
-				return
-			}
+			fmt.Println(string(message.data))
+
+			data := &msgData{}
+			json.Unmarshal(message.data, data)
+
+			time := time.Now()
+			formatted := fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02d",
+				time.Year(), time.Month(), time.Day(),
+				time.Hour(), time.Minute(), time.Second())
 
 			t, _ := template.ParseFiles("ui/ws-message.html")
 			t.Execute(w, struct {
-				RoomId string
-				Msg    string
-			}{RoomId: data.Headers["HX-Target"], Msg: data.Msg})
+				Rid   string
+				Uname string
+				Msg   string
+				Time  string
+			}{Rid: c.rid, Uname: message.uname, Msg: data.Msg, Time: formatted})
 
 			// Add queued chat messages to the current websocket message.
 			n := len(c.send)
 			for i := 0; i < n; i++ {
 				w.Write(newline)
-				w.Write(<-c.send)
+				//w.Write(<-c.send)
 				// t.Execute(w, newline)
 				// t.Execute(w, data.Msg)
 			}
