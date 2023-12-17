@@ -7,13 +7,13 @@ run:
 	go run $(RTM_PATH)
 
 build:
-	go build -o bin/$(NAME) $(RTM_PATH)
+	go build -o dist/$(NAME) $(RTM_PATH)
 
 start:
-	./bin/$(NAME)
+	./dist/$(NAME)
 
 clean:
-	rm -rf bin
+	rm -rf dist
 
 up:
 	@goose -dir internal/db/migrations/ postgres "user=${DATABASE_USER} password=${DATABASE_PASSWORD} dbname=${DATABASE_NAME} sslmode=disable" up
