@@ -1,5 +1,7 @@
-<div id="log-{{.Rid}}" hx-swap-oob="beforeend">
-    {{.Uname}}
-    {{.Time}}
-    {{.Msg}}
+<div hx-swap-oob="beforeend:#log">
+    <p>
+        {{.Uname}}
+        {{.Time}}
+        {{.Msg}}
+    </p>
 </div>

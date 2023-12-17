@@ -112,8 +112,6 @@ func (c *client) writePump() {
 				return
 			}
 
-			fmt.Println(string(message.data))
-
 			data := &msgData{}
 			json.Unmarshal(message.data, data)
 

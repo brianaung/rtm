@@ -1,13 +1,18 @@
 {{define "content"}}
 <article>
-    <button hx-get="/delete/{{.Rid}}" hx-swap="none">
-        Delete Room
-    </button>
-    <h1>{{.Rname}}</h1>
-    <p>#{{.Rid}}</p>
-    <section hx-ext="ws" ws-connect="/ws/chat/{{.Rid}}" ws-target="#log-{{.Rid}}">
-        <div id="log-{{.Rid}}" hx-swap-oob="beforeend">log:</div>
-        <form id="{{.Rid}}" ws-send>
+    <div class="flex items-center justify-between">
+        <div>
+            <h2>{{.Rname}}</h2>
+            <p>#{{.Rid}}</p>
+        </div>
+        <button class="bg-red-500" hx-get="/delete/{{.Rid}}" hx-swap="none">
+            delete room
+        </button>
+    </div>
+
+    <section class="flex flex-col justify-between" hx-ext="ws" ws-connect="/ws/chat/{{.Rid}}">
+        <div class="flex flex-col" id="log"></div>
+        <form id="form" ws-send>
             <input type="text" name="msg" size="64" autofocus />
             <input type="submit" value="Send" />
         </form>
