@@ -1,10 +1,14 @@
-<article>
-    <h2>Login</h2>
-    <form hx-post="/login" hx-trigger="submit" hx-swap="none">
-        <label for="username">Username</label>
-        <input id="username" name="username" rows="1" cols="20" />
-        <label for="password">Password</label>
-        <input id="password" name="password" rows="1" cols="20" />
-        <input type="submit" value="Save" />
+<article class="container">
+    <h2>login</h2>
+    <form class="flex flex-col gap-4" hx-post="/login" hx-trigger="submit" hx-swap="none">
+        <div class="flex flex-col">
+            <label for="username">username</label>
+            <input id="username" name="username" rows="1" cols="20" />
+        </div>
+        <div class="flex flex-col">
+            <label for="password">password</label>
+            <input id="password" name="password" rows="1" cols="20" />
+        </div>
+        <input class="bg-blue-500" type="submit" value="login" />
     </form>
 </article>

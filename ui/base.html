@@ -14,11 +14,13 @@
 </head>
 
 <body>
-    <header><a href="/dashboard">home</a></header>
-    <main>
-        <h1 class="text-3xl font-bold underline">
-            Hello world!
-        </h1>
+    <header class="flex justify-between items-center">
+        <a href="/dashboard">home</a>
+        {{if .}}
+        <button hx-get="/logout" hx-trigger="click" hx-swap="none">logout</button>
+        {{end}}
+    </header>
+    <main class="container">
         {{template "content" .}}
     </main>
 </body>

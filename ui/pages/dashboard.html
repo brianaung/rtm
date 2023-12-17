@@ -1,8 +1,6 @@
 {{define "content"}}
 <article>
-    <button hx-get="/logout" hx-trigger="click" hx-swap="none">logout</button>
-    <h1>Dashboard</h1>
-    <p>G'day {{.User.Username}}!</p>
+    <h2>G'day {{.User.Username}}!</h2>
     <form hx-post="/create" hx-trigger="submit" hx-swap="none">
         <input id="create-room" name="rname" rows="1" cols="20" placeholder="Enter your room name" />
         <input type="submit" value="Create Room" />
@@ -12,12 +10,16 @@
         <input type="submit" value="Join Room" />
     </form>
 
-    <p>Your active rooms:</p>
+    <p>active rooms:</p>
+    {{if not .Rs}}
+    <p>empty</p>
+    {{else}}
     <ul>
         {{range $R := .Rs}}
         <li><a href="/room/{{$R.Rid}}">{{$R.Rname}}</a> #{{$R.Rid}}</li>
         {{end}}
     </ul>
+    {{end}}
 
 </article>
 {{end}}
