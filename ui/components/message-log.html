@@ -1,7 +1,8 @@
-<div hx-swap-oob="beforeend:#log">
-    <p>
-        {{.Uname}}
-        {{.Time}}
-        {{.Msg}}
-    </p>
+<div hx-swap-oob="afterbegin:#log">
+    <div>
+        <p class="text-xs">{{.Uname}}@{{.Time}}</p>
+        <p class="text-lg">
+            {{.Msg}}
+        </p>
+    </div>
 </div>

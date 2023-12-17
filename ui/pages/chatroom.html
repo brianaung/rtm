@@ -1,4 +1,6 @@
 {{define "content"}}
+<script>
+</script>
 <article>
     <div class="flex items-center justify-between">
         <div>
@@ -10,8 +12,8 @@
         </button>
     </div>
 
-    <section class="flex flex-col justify-between" hx-ext="ws" ws-connect="/ws/chat/{{.Rid}}">
-        <div class="flex flex-col" id="log"></div>
+    <section class="flex flex-col justify-end h-96" hx-ext="ws" ws-connect="/ws/chat/{{.Rid}}">
+        <div class="flex flex-col-reverse max-h-full overflow-y-auto" id="log"></div>
         <form id="form" ws-send>
             <input type="text" name="msg" size="64" autofocus />
             <input type="submit" value="Send" />
