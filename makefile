@@ -15,6 +15,9 @@ start:
 clean:
 	rm -rf dist
 
+tailwind:
+	npx tailwindcss -i ./ui/input.css -o ./static/main.css --watch
+
 up:
 	@goose -dir internal/db/migrations/ postgres "user=${DATABASE_USER} password=${DATABASE_PASSWORD} dbname=${DATABASE_NAME} sslmode=disable" up
 
@@ -24,4 +27,4 @@ down:
 status:
 	@goose -dir internal/db/migrations/ postgres "user=${DATABASE_USER} password=${DATABASE_PASSWORD} dbname=${DATABASE_NAME} sslmode=disable" status
 
-.PHONY: run build start clean up down status
+.PHONY: run build start clean up down status tailwind
