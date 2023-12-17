@@ -7,13 +7,16 @@ run:
 	go run $(RTM_PATH)
 
 build:
-	go build -o bin/$(NAME) $(RTM_PATH)
+	go build -o dist/$(NAME) $(RTM_PATH)
 
 start:
-	./bin/$(NAME)
+	./dist/$(NAME)
 
 clean:
-	rm -rf bin
+	rm -rf dist
+
+tailwind:
+	npx tailwindcss -i ./ui/input.css -o ./static/main.css --watch
 
 up:
 	@goose -dir internal/db/migrations/ postgres "user=${DATABASE_USER} password=${DATABASE_PASSWORD} dbname=${DATABASE_NAME} sslmode=disable" up
@@ -24,4 +27,4 @@ down:
 status:
 	@goose -dir internal/db/migrations/ postgres "user=${DATABASE_USER} password=${DATABASE_PASSWORD} dbname=${DATABASE_NAME} sslmode=disable" status
 
-.PHONY: run build start clean up down status
+.PHONY: run build start clean up down status tailwind

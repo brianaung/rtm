@@ -1,0 +1,22 @@
+{{define "content"}}
+<script>
+</script>
+<article>
+    <div class="flex items-center justify-between">
+        <div>
+            <h2>{{.Rname}}</h2>
+            <p>#{{.Rid}}</p>
+        </div>
+        <button class="bg-red-500" hx-get="/delete/{{.Rid}}" hx-swap="none">
+            delete room
+        </button>
+    </div>
+    <section class="flex flex-col justify-end h-[80vh]" hx-ext="ws" ws-connect="/ws/chat/{{.Rid}}">
+        <div class="flex flex-col-reverse max-h-full overflow-y-auto" id="log"></div>
+        <form id="form" ws-send class="flex justify-between w-full">
+            <input type="text" name="msg" size="64" autofocus class="w-full" />
+            <input type="submit" value="Send" />
+        </form>
+    </section>
+</article>
+{{end}}

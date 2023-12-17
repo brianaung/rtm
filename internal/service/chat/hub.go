@@ -21,8 +21,9 @@ type member struct {
 }
 
 type message struct {
-	rid  string
-	data []byte
+	rid   string
+	uname string
+	data  []byte
 }
 
 func newHub() *hub {
@@ -58,7 +59,7 @@ func (h *hub) run() {
 			for _, member := range members {
 				for c := range member.clients {
 					select {
-					case c.send <- m.data:
+					case c.send <- m:
 					default:
 						delete(member.clients, c)
 						close(c.send)
