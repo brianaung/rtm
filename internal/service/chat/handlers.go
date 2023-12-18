@@ -18,10 +18,14 @@ import (
 func (s *service) handleDashboard(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
 	rsData := make([]view.RoomData, 0)
-	for _, room := range s.hub.rooms {
-		if _, ok := room.members[user.ID]; ok {
-			rsData = append(rsData, view.RoomData{Rid: room.rid, Rname: room.rname})
-		}
+	rids, err := getRidsForUser(r.Context(), s.db, user.ID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+	}
+	for _, rid := range rids {
+		room, _ := getRoomByID(r.Context(), s.db, rid)
+		rsData = append(rsData, view.RoomData{Rid: room.ID, Rname: room.Name})
 	}
 	w.WriteHeader(http.StatusOK)
 	view.Dashboard(user, rsData).Render(r.Context(), w)
@@ -37,9 +41,14 @@ func (s *service) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
 	rname := r.FormValue("rname")
 	rid := uuid.Must(uuid.NewV4())
-	s.hub.rooms[rid] = &room{rid: rid, rname: rname, members: make(map[uuid.UUID]*member)}
-	s.hub.rooms[rid].members[user.ID] = &member{uid: user.ID, clients: make(map[*client]bool)}
-	//addRoom(r.Context(), s.db, &Room{ID: rid, Name: rname, CreatorID: user.ID})
+	s.hub.rooms[rid] = make(map[*client]bool)
+	err := addRoom(r.Context(), s.db, &Room{ID: rid, Name: rname, CreatorID: user.ID})
+	err = addMembership(r.Context(), s.db, &RoomUser{Rid: rid, Uid: user.ID})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+	}
+	// todo: create membership table? (i.e. room and user/members junction table)
 	w.Header().Set("HX-Redirect", "/room/"+rid.String())
 	w.WriteHeader(http.StatusOK)
 }
@@ -52,18 +61,21 @@ func (s *service) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 func (s *service) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
 	rid := uuid.Must(uuid.FromString(r.FormValue("rid")))
-	room, ok := s.hub.rooms[rid]
-	if !ok {
+	if _, err := getRoomByID(r.Context(), s.db, rid); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Room does not exists"))
 		return
 	}
-	if _, ok := room.members[user.ID]; ok {
+	if ok, _ := isAMember(r.Context(), s.db, &RoomUser{Rid: rid, Uid: user.ID}); ok {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("You are already in the room"))
 		return
 	}
-	room.members[user.ID] = &member{uid: user.ID, clients: make(map[*client]bool)}
+	err := addMembership(r.Context(), s.db, &RoomUser{Rid: rid, Uid: user.ID})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Something went wrong"))
+	}
 	w.Header().Set("HX-Redirect", "/room/"+rid.String())
 	w.WriteHeader(http.StatusOK)
 }
@@ -75,18 +87,18 @@ func (s *service) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
 func (s *service) handleGotoRoom(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
 	rid := uuid.Must(uuid.FromString(chi.URLParam(r, "rid")))
-	room, ok := s.hub.rooms[rid]
-	if !ok {
+	if ok, err := isAMember(r.Context(), s.db, &RoomUser{Rid: rid, Uid: user.ID}); err != nil || !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Room does not exists or user have no access to it"))
+		return
+	}
+	room, err := getRoomByID(r.Context(), s.db, rid)
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Room does not exists"))
 		return
 	}
-	if _, ok := s.hub.rooms[rid].members[user.ID]; !ok {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("User does not have access to the room"))
-		return
-	}
-	view.Chatroom(user, view.RoomData{Rid: room.rid, Rname: room.rname}).Render(r.Context(), w)
+	view.Chatroom(user, view.RoomData{Rid: room.ID, Rname: room.Name}).Render(r.Context(), w)
 }
 
 // serveWs creates a websocket connection/client to use while in the chatroom.
@@ -97,31 +109,38 @@ func (s *service) handleGotoRoom(w http.ResponseWriter, r *http.Request) {
 func (s *service) serveWs(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
 	rid := uuid.Must(uuid.FromString(chi.URLParam(r, "rid")))
-	room, ok := s.hub.rooms[rid]
-	if !ok {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Something went wrong, room no longer exists"))
-		return
-	}
-	member, ok := room.members[user.ID]
-	if !ok {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Something went wrong, you no longer have access to the room"))
-		return
-	}
+	//	room, ok := s.hub.rooms[rid]
+	//	if !ok {
+	//		w.WriteHeader(http.StatusBadRequest)
+	//		w.Write([]byte("Something went wrong, room no longer exists"))
+	//		return
+	//	}
+	//	member, ok := room.members[user.ID]
+	//	if !ok {
+	//		w.WriteHeader(http.StatusBadRequest)
+	//		w.Write([]byte("Something went wrong, you no longer have access to the room"))
+	//		return
+	//	}
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
+	// client conn data is in-memory only so this can get erased when the server restarts
+	if s.hub.rooms == nil {
+		s.hub.rooms = make(map[uuid.UUID]map[*client]bool)
+		s.hub.rooms[rid] = make(map[*client]bool)
+	} else if s.hub.rooms[rid] == nil {
+		s.hub.rooms[rid] = make(map[*client]bool)
+	}
 	c := newClient(s.hub, rid, user.ID, user.Username, conn)
-	member.clients[c] = true
 	s.hub.register <- c
 	go c.writePump()
 	go c.readPump()
 }
 
+/*
 // TODO: only allow admin to delete
 func (s *service) handleDeleteRoom(w http.ResponseWriter, r *http.Request) {
 	rid := uuid.Must(uuid.FromString(chi.URLParam(r, "rid")))
@@ -139,3 +158,4 @@ func (s *service) handleDeleteRoom(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("HX-Redirect", "/dashboard")
 	w.WriteHeader(http.StatusOK)
 }
+*/
