@@ -4,21 +4,22 @@ import (
 	"net/http"
 
 	"github.com/brianaung/rtm/ui"
+	"github.com/brianaung/rtm/view"
 )
 
 func (s *service) handleHome(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusFound)
-	ui.RenderPage(w, nil, "landing")
+	view.Landing().Render(r.Context(), w)
 }
 
 func (s *service) handleGetLoginForm(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusFound)
-    ui.RenderComponent(w, nil, "login-form")
+	ui.RenderComponent(w, nil, "login-form")
 }
 
 func (s *service) handleGetSignupForm(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusFound)
-    ui.RenderComponent(w, nil, "signup-form")
+	ui.RenderComponent(w, nil, "signup-form")
 }
 
 /* ================================================ */

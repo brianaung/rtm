@@ -3,8 +3,11 @@ include .env
 NAME=rtm
 RTM_PATH=cmd/rtm/main.go
 
-run:
+run: templ
 	go run $(RTM_PATH)
+
+templ:
+	templ generate
 
 build:
 	go build -o dist/$(NAME) $(RTM_PATH)

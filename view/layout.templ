@@ -1,0 +1,23 @@
+package view
+
+templ Layout() {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width"/>
+			<title>rtm</title>
+			<script src="https://unpkg.com/htmx.org@1.9.9" integrity="sha384-QFjmbokDn2DjBjq+fM+8LUIVrAgqcNW2s0PjAxHETgRn9l4fvX31ZxDxvwQnyMOX" crossorigin="anonymous"></script>
+			<script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
+			<link href="/dist/output.css" rel="stylesheet"/>
+		</head>
+		<body>
+			<header class="flex justify-between items-center">
+				<a href="/dashboard">home</a>
+			</header>
+			<main class="mx-auto container flex-col items-center">
+				{ children... }
+			</main>
+		</body>
+	</html>
+}
