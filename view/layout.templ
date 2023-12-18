@@ -2,6 +2,12 @@ package view
 
 import "github.com/brianaung/rtm/internal/auth"
 
+// RoomData is used to pass room data into the html templates
+type RoomData struct {
+	Rid   string
+	Rname string
+}
+
 templ layout(user *auth.UserContext) {
 	<!DOCTYPE html>
 	<html lang="en">

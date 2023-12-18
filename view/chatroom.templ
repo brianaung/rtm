@@ -1,0 +1,30 @@
+package view
+
+import "github.com/brianaung/rtm/internal/auth"
+
+templ Chatroom(user *auth.UserContext, room RoomData) {
+	@layout(user) {
+		<article>
+			<div class="flex items-center justify-between">
+				<div>
+					<h2>{ room.Rname }</h2>
+					<p>#{ room.Rid }</p>
+				</div>
+				<button class="bg-red-500" hx-get={ "/delete/" + room.Rid } hx-swap="none">
+					delete room
+				</button>
+			</div>
+			<section
+ 				class="flex flex-col justify-end h-[80vh]"
+ 				hx-ext="ws"
+ 				ws-connect={ "/ws/chat/" + room.Rid }
+			>
+				<div class="flex flex-col-reverse max-h-full overflow-y-auto" id="log"></div>
+				<form id="form" ws-send class="flex justify-between w-full">
+					<input type="text" name="msg" size="64" autofocus class="w-full"/>
+					<input type="submit" value="Send"/>
+				</form>
+			</section>
+		</article>
+	}
+}

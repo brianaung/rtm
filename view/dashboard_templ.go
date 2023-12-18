@@ -12,12 +12,6 @@ import "bytes"
 
 import "github.com/brianaung/rtm/internal/auth"
 
-// RoomData is used to pass room data into the html templates
-type RoomData struct {
-	Rid   string
-	Rname string
-}
-
 func Dashboard(user *auth.UserContext, rooms []RoomData) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)

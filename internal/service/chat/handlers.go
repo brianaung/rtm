@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/brianaung/rtm/internal/auth"
-	"github.com/brianaung/rtm/ui"
 	"github.com/brianaung/rtm/view"
 	"github.com/go-chi/chi/v5"
 )
@@ -22,10 +21,6 @@ func (s *service) handleDashboard(w http.ResponseWriter, r *http.Request) {
 			rsData = append(rsData, view.RoomData{Rid: room.rid, Rname: room.rname})
 		}
 	}
-	//data := struct {
-	//	User *auth.UserContext
-	//	Rs   []view.RoomData
-	//}{User: user, Rs: rsData}
 	w.WriteHeader(http.StatusOK)
 	view.Dashboard(user, rsData).Render(r.Context(), w)
 }
@@ -94,7 +89,7 @@ func (s *service) handleGotoRoom(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("User does not have access to the room"))
 		return
 	}
-	ui.RenderPage(w, view.RoomData{Rid: room.rid, Rname: room.rname}, "chatroom")
+	view.Chatroom(user, view.RoomData{Rid: room.rid, Rname: room.rname}).Render(r.Context(), w)
 }
 
 // serveWs creates a websocket connection/client to use while in the chatroom.
