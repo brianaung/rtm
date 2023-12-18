@@ -28,3 +28,22 @@ templ Chatroom(user *auth.UserContext, room RoomData) {
 		</article>
 	}
 }
+
+templ MessageLog(msg MsgData) {
+	<div hx-swap-oob="afterbegin:#log">
+		<div>
+			<p
+ 				class={ "text-xs", templ.KV("text-right", msg.Mine) }
+			>{ msg.Uname }"@"{ msg.Time }</p>
+			<p
+ 				class={
+					"text-white whitespace-normal overflow-hidden w-fit rounded p-1",
+					templ.KV("ml-auto text-right bg-blue-600", msg.Mine),
+					templ.KV("bg-gray-600", !msg.Mine),
+				}
+			>
+				{ msg.Msg }
+			</p>
+		</div>
+	</div>
+}

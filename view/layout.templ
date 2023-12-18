@@ -8,6 +8,15 @@ type RoomData struct {
 	Rname string
 }
 
+// MsgData is used to pass the current message log with its metadata to the html templates
+type MsgData struct {
+	Rid   string
+	Uname string
+	Msg   string
+	Time  string
+	Mine  bool
+}
+
 templ layout(user *auth.UserContext) {
 	<!DOCTYPE html>
 	<html lang="en">

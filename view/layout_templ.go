@@ -18,6 +18,15 @@ type RoomData struct {
 	Rname string
 }
 
+// MsgData is used to pass the current message log with its metadata to the html templates
+type MsgData struct {
+	Rid   string
+	Uname string
+	Msg   string
+	Time  string
+	Mine  bool
+}
+
 func layout(user *auth.UserContext) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
