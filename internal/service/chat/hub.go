@@ -1,34 +1,36 @@
 package chat
 
+import "github.com/gofrs/uuid/v5"
+
 type hub struct {
-	rooms      map[string]*room // room: map[string]*member
-	broadcast  chan *message    // inbound messsages from the client
-	register   chan *client     // register requests from the client
-	unregister chan *client     // unregister requests from the client
+	rooms      map[uuid.UUID]*room // room: map[string]*member
+	broadcast  chan *message       // inbound messsages from the client
+	register   chan *client        // register requests from the client
+	unregister chan *client        // unregister requests from the client
 	quit       chan bool
 }
 
 type room struct {
-	rid   string
+	rid   uuid.UUID
 	rname string
 
-	members map[string]*member
+	members map[uuid.UUID]*member
 }
 
 type member struct {
-	uid     string
+	uid     uuid.UUID
 	clients map[*client]bool
 }
 
 type message struct {
-	rid   string
+	rid   uuid.UUID
 	uname string
 	data  []byte
 }
 
 func newHub() *hub {
 	return &hub{
-		rooms:      make(map[string]*room),
+		rooms:      make(map[uuid.UUID]*room),
 		broadcast:  make(chan *message),
 		register:   make(chan *client),
 		unregister: make(chan *client),

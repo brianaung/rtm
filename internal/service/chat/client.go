@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/brianaung/rtm/view"
+	"github.com/gofrs/uuid/v5"
 	"github.com/gorilla/websocket"
 )
 
@@ -41,8 +42,8 @@ var upgrader = websocket.Upgrader{
 // client is a middleman between the websocket connection and the hub.
 type client struct {
 	hub   *hub
-	rid   string
-	uid   string
+	rid   uuid.UUID
+	uid   uuid.UUID
 	uname string
 	// The websocket connection.
 	conn *websocket.Conn
@@ -50,7 +51,7 @@ type client struct {
 	send chan *message
 }
 
-func newClient(hub *hub, rid string, uid string, uname string, conn *websocket.Conn) *client {
+func newClient(hub *hub, rid uuid.UUID, uid uuid.UUID, uname string, conn *websocket.Conn) *client {
 	return &client{
 		hub:   hub,
 		rid:   rid,

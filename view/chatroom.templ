@@ -8,16 +8,16 @@ templ Chatroom(user *auth.UserContext, room RoomData) {
 			<div class="flex items-center justify-between">
 				<div>
 					<h2>{ room.Rname }</h2>
-					<p>#{ room.Rid }</p>
+					<p>#{ room.Rid.String() }</p>
 				</div>
-				<button class="bg-red-500" hx-get={ "/delete/" + room.Rid } hx-swap="none">
+				<button class="bg-red-500" hx-get={ "/delete/" + room.Rid.String() } hx-swap="none">
 					delete room
 				</button>
 			</div>
 			<section
  				class="flex flex-col justify-end h-[80vh]"
  				hx-ext="ws"
- 				ws-connect={ "/ws/chat/" + room.Rid }
+ 				ws-connect={ "/ws/chat/" + room.Rid.String() }
 			>
 				<div class="flex flex-col-reverse max-h-full overflow-y-auto" id="log"></div>
 				<form id="form" ws-send class="flex justify-between w-full">

@@ -5,7 +5,9 @@ import (
 
 	"github.com/brianaung/rtm/internal/auth"
 	"github.com/brianaung/rtm/view"
+
 	"github.com/go-chi/chi/v5"
+	"github.com/gofrs/uuid/v5"
 )
 
 // handleDashboard serve the dashboard html with relevant information.
@@ -34,16 +36,11 @@ func (s *service) handleDashboard(w http.ResponseWriter, r *http.Request) {
 func (s *service) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
 	rname := r.FormValue("rname")
-	rid := rname + user.ID
-	if _, ok := s.hub.rooms[rid]; ok {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Room already exists"))
-		return
-	}
-	// TODO: create uuid or sth similar
-	s.hub.rooms[rid] = &room{rid: rid, rname: rname, members: make(map[string]*member)}
+	rid := uuid.Must(uuid.NewV4())
+	s.hub.rooms[rid] = &room{rid: rid, rname: rname, members: make(map[uuid.UUID]*member)}
 	s.hub.rooms[rid].members[user.ID] = &member{uid: user.ID, clients: make(map[*client]bool)}
-	w.Header().Set("HX-Redirect", "/room/"+rid)
+	//addRoom(r.Context(), s.db, &Room{ID: rid, Name: rname, CreatorID: user.ID})
+	w.Header().Set("HX-Redirect", "/room/"+rid.String())
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -54,7 +51,7 @@ func (s *service) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 // yet.
 func (s *service) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
-	rid := r.FormValue("rid")
+	rid := uuid.Must(uuid.FromString(r.FormValue("rid")))
 	room, ok := s.hub.rooms[rid]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
@@ -67,7 +64,7 @@ func (s *service) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	room.members[user.ID] = &member{uid: user.ID, clients: make(map[*client]bool)}
-	w.Header().Set("HX-Redirect", "/room/"+rid)
+	w.Header().Set("HX-Redirect", "/room/"+rid.String())
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -77,7 +74,7 @@ func (s *service) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
 // where a new websocket connection will begin, which is handled by `serveWs`.
 func (s *service) handleGotoRoom(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
-	rid := chi.URLParam(r, "rid")
+	rid := uuid.Must(uuid.FromString(chi.URLParam(r, "rid")))
 	room, ok := s.hub.rooms[rid]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
@@ -99,7 +96,7 @@ func (s *service) handleGotoRoom(w http.ResponseWriter, r *http.Request) {
 // for reading and writing messages.
 func (s *service) serveWs(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
-	rid := chi.URLParam(r, "rid")
+	rid := uuid.Must(uuid.FromString(chi.URLParam(r, "rid")))
 	room, ok := s.hub.rooms[rid]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
@@ -127,7 +124,7 @@ func (s *service) serveWs(w http.ResponseWriter, r *http.Request) {
 
 // TODO: only allow admin to delete
 func (s *service) handleDeleteRoom(w http.ResponseWriter, r *http.Request) {
-	rid := chi.URLParam(r, "rid")
+	rid := uuid.Must(uuid.FromString(chi.URLParam(r, "rid")))
 	room, ok := s.hub.rooms[rid]
 	if !ok || room.members == nil {
 		return

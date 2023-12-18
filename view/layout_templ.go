@@ -11,16 +11,17 @@ import "io"
 import "bytes"
 
 import "github.com/brianaung/rtm/internal/auth"
+import "github.com/gofrs/uuid/v5"
 
 // RoomData is used to pass room data into the html templates
 type RoomData struct {
-	Rid   string
+	Rid   uuid.UUID
 	Rname string
 }
 
 // MsgData is used to pass the current message log with its metadata to the html templates
 type MsgData struct {
-	Rid   string
+	Rid   uuid.UUID
 	Uname string
 	Msg   string
 	Time  string
