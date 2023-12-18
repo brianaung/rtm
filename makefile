@@ -6,9 +6,6 @@ RTM_PATH=cmd/rtm/main.go
 run: templ
 	go run $(RTM_PATH)
 
-templ:
-	templ generate
-
 build:
 	go build -o dist/$(NAME) $(RTM_PATH)
 
@@ -17,6 +14,9 @@ start:
 
 clean:
 	rm -rf dist
+
+templ:
+	templ generate
 
 tailwind:
 	npx tailwindcss -i ./view/input.css -o ./dist/output.css --watch
@@ -30,4 +30,4 @@ down:
 status:
 	@goose -dir internal/db/migrations/ postgres "user=${DATABASE_USER} password=${DATABASE_PASSWORD} dbname=${DATABASE_NAME} sslmode=disable" status
 
-.PHONY: run build start clean up down status tailwind
+.PHONY: run build start clean templ tailwind up down status 

@@ -121,7 +121,6 @@ func (c *client) writePump() {
 				time.Year(), time.Month(), time.Day(),
 				time.Hour(), time.Minute(), time.Second())
 
-			//t, _ := template.ParseFiles("ui/components/message-log.html")
 			view.MessageLog(view.MsgData{
 				Rid:   c.rid,
 				Uname: message.uname,
