@@ -13,13 +13,11 @@ func (s *service) handleHome(w http.ResponseWriter, r *http.Request) {
 
 func (s *service) handleGetLoginForm(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusFound)
-	//ui.RenderComponent(w, nil, "login-form")
 	view.LoginForm().Render(r.Context(), w)
 }
 
 func (s *service) handleGetSignupForm(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusFound)
-	//ui.RenderComponent(w, nil, "signup-form")
 	view.SignupForm().Render(r.Context(), w)
 }
 
