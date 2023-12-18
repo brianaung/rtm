@@ -36,7 +36,7 @@ func (s *service) Routes() {
 		r.Post("/join", s.handleJoinRoom)
 		r.Get("/room/{rid}", s.handleGotoRoom)
 		r.Get("/delete/{rid}", s.handleDeleteRoom)
-		// todo: unregister route?
+		// TODO: leave room route?
 
 		// ws connection
 		r.Get("/ws/chat/{rid}", s.serveWs)

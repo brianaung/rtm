@@ -18,11 +18,20 @@ type RoomUser struct {
 	Uid uuid.UUID `json:"user_id"`
 }
 
+// =================================== Update ===================================
 func addRoom(ctx context.Context, db *pgxpool.Pool, r *Room) error {
 	_, err := db.Exec(ctx, `insert into room(id, roomname, creator_id) values($1, $2, $3)`, r.ID, r.Name, r.CreatorID)
 	return err
 }
 
+func addUserToRoom(ctx context.Context, db *pgxpool.Pool, ru *RoomUser) error {
+	_, err := db.Exec(ctx, `insert into room_user(room_id, user_id) values($1, $2)`, ru.Rid, ru.Uid)
+	return err
+}
+
+// ==============================================================================
+
+// =================================== Read ===================================
 func getRoomByID(ctx context.Context, db *pgxpool.Pool, id uuid.UUID) (*Room, error) {
 	r := &Room{}
 	err := db.QueryRow(ctx, `select * from room where room.id = $1`, id).Scan(&r.ID, &r.Name, &r.CreatorID)
@@ -50,37 +59,26 @@ func getAllRooms(ctx context.Context, db *pgxpool.Pool) ([]*Room, error) {
 	return rooms, nil
 }
 
-func addMembership(ctx context.Context, db *pgxpool.Pool, ru *RoomUser) error {
-	_, err := db.Exec(ctx, `insert into room_user(room_id, user_id) values($1, $2)`, ru.Rid, ru.Uid)
-	return err
-}
-
-func isAMember(ctx context.Context, db *pgxpool.Pool, ru *RoomUser) (bool, error) {
-	exists := false
-	err := db.QueryRow(ctx, `select exists(select 1 from room_user ru where ru.room_id = $1 and ru.user_id = $2)`, ru.Rid, ru.Uid).Scan(&exists)
-	if err != nil {
-		return false, err
-	}
-	return exists, nil
-}
-
-// getUserRooms - given uid, return all rooms that the uid is apart of
-func getRidsForUser(ctx context.Context, db *pgxpool.Pool, uid uuid.UUID) ([]uuid.UUID, error) {
-	rows, err := db.Query(ctx, `select (room_id) from room_user ru where ru.user_id = $1`, uid)
-	defer rows.Close()
+func getRoomsFromUser(ctx context.Context, db *pgxpool.Pool, uid uuid.UUID) ([]*Room, error) {
+	rows, err := db.Query(ctx,
+		`select room.id, room.roomname, room.creator_id
+        from room
+        inner join room_user on room_user.room_id = room.id
+        inner join "user" u on room_user.user_id = u.id
+        where u.id = $1`, uid)
 	if err != nil {
 		return nil, err
 	}
-	rids := make([]uuid.UUID, 0)
+	rooms := make([]*Room, 0)
 	for rows.Next() {
-		var rid uuid.UUID
-		err := rows.Scan(&rid)
+		room := &Room{}
+		err := rows.Scan(&room.ID, &room.Name, &room.CreatorID)
 		if err != nil {
 			return nil, err
 		}
-		rids = append(rids, rid)
+		rooms = append(rooms, room)
 	}
-	return rids, nil
+	return rooms, nil
 }
 
 func getUidsFromRoom(ctx context.Context, db *pgxpool.Pool, rid uuid.UUID) ([]uuid.UUID, error) {
@@ -100,12 +98,26 @@ func getUidsFromRoom(ctx context.Context, db *pgxpool.Pool, rid uuid.UUID) ([]uu
 	return uids, nil
 }
 
+// ==============================================================================
+
+// =================================== Delete ===================================
 func deleteRoomById(ctx context.Context, db *pgxpool.Pool, rid uuid.UUID) error {
 	_, err := db.Exec(ctx, `delete from room where room.id = $1`, rid)
 	return err
 }
 
-func removeMembership(ctx context.Context, db *pgxpool.Pool, ru *RoomUser) error {
+func deleteUserFromRoom(ctx context.Context, db *pgxpool.Pool, ru *RoomUser) error {
 	_, err := db.Exec(ctx, `delete from room_user ru where ru.room_id = $1 and ru.user_id = $2`, ru.Rid, ru.Uid)
 	return err
+}
+
+// ==============================================================================
+
+func isAMember(ctx context.Context, db *pgxpool.Pool, ru *RoomUser) (bool, error) {
+	exists := false
+	err := db.QueryRow(ctx, `select exists(select 1 from room_user ru where ru.room_id = $1 and ru.user_id = $2)`, ru.Rid, ru.Uid).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
 }

@@ -32,7 +32,7 @@ func (h *hub) run() {
 	for {
 		select {
 		// register, unregister chan is only for client/conn, not for removing entire user
-		// todo: another chan for removing user
+		// TODO: another chan for removing user
 		case c := <-h.register:
 			// register client to the hub
 			h.rooms[c.rid][c] = true
