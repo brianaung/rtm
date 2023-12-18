@@ -1,6 +1,8 @@
 package view
 
-templ Layout() {
+import "github.com/brianaung/rtm/internal/auth"
+
+templ layout(user *auth.UserContext) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
@@ -14,6 +16,9 @@ templ Layout() {
 		<body>
 			<header class="flex justify-between items-center">
 				<a href="/dashboard">home</a>
+				if user != nil {
+					<button hx-get="/logout" hx-trigger="click" hx-swap="none">logout</button>
+				}
 			</header>
 			<main class="mx-auto container flex-col items-center">
 				{ children... }

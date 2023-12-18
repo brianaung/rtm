@@ -1,0 +1,38 @@
+package view
+
+import "github.com/brianaung/rtm/internal/auth"
+
+// RoomData is used to pass room data into the html templates
+type RoomData struct {
+	Rid   string
+	Rname string
+}
+
+templ Dashboard(user *auth.UserContext, rooms []RoomData) {
+	@layout(user) {
+		<article>
+			<h2>G'day { user.Username }!</h2>
+			<form hx-post="/create" hx-trigger="submit" hx-swap="none">
+				<input id="create-room" name="rname" rows="1" cols="20" placeholder="Enter your room name"/>
+				<input type="submit" value="Create Room"/>
+			</form>
+			<form hx-post="/join" hx-trigger="submit" hx-swap="none">
+				<input id="join-room" name="rid" rows="1" cols="20" placeholder="Enter the room id"/>
+				<input type="submit" value="Join Room"/>
+			</form>
+			<p>active rooms:</p>
+			if len(rooms) == 0 {
+				<p>empty</p>
+			} else {
+				<ul>
+					for _, r := range rooms {
+						<li>
+							<a href={ templ.URL("/room/" + r.Rid) }>{ r.Rname }</a>
+							#{ r.Rid }
+						</li>
+					}
+				</ul>
+			}
+		</article>
+	}
+}
