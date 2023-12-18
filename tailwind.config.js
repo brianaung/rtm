@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./ui/**/*.html"],
+  content: ["./view/**/*.{templ,go}"],
   theme: {
     screens: {
       mobile: "360px",

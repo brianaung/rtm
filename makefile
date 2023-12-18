@@ -9,17 +9,17 @@ run: templ
 build:
 	go build -o dist/$(NAME) $(RTM_PATH)
 
-start:
+start: build
 	./dist/$(NAME)
 
 clean:
 	rm -rf dist
 
-templ:
+templ: tailwind
 	templ generate
 
 tailwind:
-	npx tailwindcss -i ./view/input.css -o ./dist/output.css --watch
+	npx tailwindcss -i ./view/input.css -o ./dist/output.css
 
 up:
 	@goose -dir internal/db/migrations/ postgres "user=${DATABASE_USER} password=${DATABASE_PASSWORD} dbname=${DATABASE_NAME} sslmode=disable" up
