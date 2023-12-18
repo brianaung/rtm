@@ -2,12 +2,13 @@ package chat
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"log"
 	"time"
 
+	"github.com/brianaung/rtm/view"
 	"github.com/gorilla/websocket"
 )
 
@@ -120,14 +121,13 @@ func (c *client) writePump() {
 				time.Year(), time.Month(), time.Day(),
 				time.Hour(), time.Minute(), time.Second())
 
-			t, _ := template.ParseFiles("ui/components/message-log.html")
-			t.Execute(w, struct {
-				Rid   string
-				Uname string
-				Msg   string
-				Time  string
-				Mine  bool
-			}{Rid: c.rid, Uname: message.uname, Msg: data.Msg, Time: formatted, Mine: c.uname == message.uname})
+			view.MessageLog(view.MsgData{
+				Rid:   c.rid,
+				Uname: message.uname,
+				Msg:   data.Msg,
+				Time:  formatted,
+				Mine:  c.uname == message.uname,
+			}).Render(context.Background(), w)
 
 			// Add queued chat messages to the current websocket message.
 			n := len(c.send)

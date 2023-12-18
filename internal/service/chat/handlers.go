@@ -4,15 +4,9 @@ import (
 	"net/http"
 
 	"github.com/brianaung/rtm/internal/auth"
-	"github.com/brianaung/rtm/ui"
+	"github.com/brianaung/rtm/view"
 	"github.com/go-chi/chi/v5"
 )
-
-// roomData is used to pass room data into the html templates
-type roomData struct {
-	Rid   string
-	Rname string
-}
 
 // handleDashboard serve the dashboard html with relevant information.
 //
@@ -21,18 +15,14 @@ type roomData struct {
 // user to create and join rooms.
 func (s *service) handleDashboard(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
-	rsData := make([]roomData, 0)
+	rsData := make([]view.RoomData, 0)
 	for _, room := range s.hub.rooms {
 		if _, ok := room.members[user.ID]; ok {
-			rsData = append(rsData, roomData{Rid: room.rid, Rname: room.rname})
+			rsData = append(rsData, view.RoomData{Rid: room.rid, Rname: room.rname})
 		}
 	}
-	data := struct {
-		User *auth.UserContext
-		Rs   []roomData
-	}{User: user, Rs: rsData}
 	w.WriteHeader(http.StatusOK)
-	ui.RenderPage(w, data, "dashboard")
+	view.Dashboard(user, rsData).Render(r.Context(), w)
 }
 
 // handleCreateRoom creates a new room with the current user added.
@@ -99,7 +89,7 @@ func (s *service) handleGotoRoom(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("User does not have access to the room"))
 		return
 	}
-	ui.RenderPage(w, roomData{Rid: room.rid, Rname: room.rname}, "chatroom")
+	view.Chatroom(user, view.RoomData{Rid: room.rid, Rname: room.rname}).Render(r.Context(), w)
 }
 
 // serveWs creates a websocket connection/client to use while in the chatroom.
