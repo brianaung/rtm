@@ -94,8 +94,8 @@ func (s *service) handleGotoRoom(w http.ResponseWriter, r *http.Request) {
 	}
 	room, err := getRoomByID(r.Context(), s.db, rid)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Room does not exists"))
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
 		return
 	}
 	view.Chatroom(user, view.RoomData{Rid: room.ID, Rname: room.Name}).Render(r.Context(), w)
@@ -140,22 +140,54 @@ func (s *service) serveWs(w http.ResponseWriter, r *http.Request) {
 	go c.readPump()
 }
 
-/*
-// TODO: only allow admin to delete
 func (s *service) handleDeleteRoom(w http.ResponseWriter, r *http.Request) {
+	user := r.Context().Value("user").(*auth.UserContext)
 	rid := uuid.Must(uuid.FromString(chi.URLParam(r, "rid")))
-	room, ok := s.hub.rooms[rid]
-	if !ok || room.members == nil {
+	room, err := getRoomByID(r.Context(), s.db, rid)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
 		return
 	}
-	for _, member := range room.members {
-		for c := range member.clients {
+	if room.CreatorID != user.ID {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("You are not authorized to delete this room"))
+		return
+	}
+	// clean in-memory connections
+	if s.hub.rooms != nil && s.hub.rooms[rid] != nil {
+		for c := range s.hub.rooms[rid] {
 			s.hub.unregister <- c
 			c.conn.Close()
 		}
+		delete(s.hub.rooms, rid)
 	}
-	delete(s.hub.rooms, rid)
+	// TODO:remove room from db
+	// delete every entry in room_user with same rid
+	uids, err := getUidsFromRoom(r.Context(), s.db, rid)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	for _, uid := range uids {
+		err := removeMembership(r.Context(), s.db, &RoomUser{Rid: rid, Uid: uid})
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+	}
+	// remove room data in room table with rid
+	err = deleteRoomById(r.Context(), s.db, rid)
+	if err != nil {
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+	}
+
 	w.Header().Set("HX-Redirect", "/dashboard")
 	w.WriteHeader(http.StatusOK)
 }
-*/
