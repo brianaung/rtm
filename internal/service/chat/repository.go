@@ -7,6 +7,7 @@ import (
 
 	"github.com/brianaung/rtm/view"
 	"github.com/gofrs/uuid/v5"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -131,23 +132,46 @@ func getRoomsFromUser(ctx context.Context, db *pgxpool.Pool, uid uuid.UUID) ([]*
 // ==============================================================================
 
 // =================================== Delete ===================================
-func deleteRoomById(ctx context.Context, db *pgxpool.Pool, rid uuid.UUID) error {
-	_, err := db.Exec(ctx, `delete from room where room.id = $1`, rid)
+// deleteRoom performs the deletion of a room and its associated entries.
+//
+// It deletes users associated with the room from the room_user junction table,
+// then all messages related to the room from the message table, and finally
+// removes the room entry from the room table. Any error encountered
+// during the deletion process or transaction execution will be returned.
+func deleteRoom(ctx context.Context, db *pgxpool.Pool, rid uuid.UUID) error {
+	tx, err := db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	// We will rollback in case of an early return.
+	// Since it is "deferred", it will still gets called after the function returns
+	// successfully, but since the transaction will already be committed by then,
+	// the rollback function will have no effect on it.
+	defer tx.Rollback(ctx)
+	if err := deleteAllUsersFromRoom(ctx, tx, rid); err != nil {
+		return err
+	}
+	if err := deleteAllMessagesFromRoom(ctx, tx, rid); err != nil {
+		return err
+	}
+	if err := deleteRoomEntry(ctx, tx, rid); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
+func deleteRoomEntry(ctx context.Context, tx pgx.Tx, rid uuid.UUID) error {
+	_, err := tx.Exec(ctx, `delete from room where room.id = $1`, rid)
 	return err
 }
 
-func deleteUserFromRoom(ctx context.Context, db *pgxpool.Pool, ru *RoomUser) error {
-	_, err := db.Exec(ctx, `delete from room_user ru where ru.room_id = $1 and ru.user_id = $2`, ru.RoomID, ru.UserID)
+func deleteAllUsersFromRoom(ctx context.Context, tx pgx.Tx, rid uuid.UUID) error {
+	_, err := tx.Exec(ctx, `delete from room_user ru where ru.room_id = $1`, rid)
 	return err
 }
 
-func deleteAllUsersFromRoom(ctx context.Context, db *pgxpool.Pool, rid uuid.UUID) error {
-	_, err := db.Exec(ctx, `delete from room_user ru where ru.room_id = $1`, rid)
-	return err
-}
-
-func deleteAllMessagesFromRoom(ctx context.Context, db *pgxpool.Pool, rid uuid.UUID) error {
-	_, err := db.Exec(ctx, `delete from message where message.room_id = $1`, rid)
+func deleteAllMessagesFromRoom(ctx context.Context, tx pgx.Tx, rid uuid.UUID) error {
+	_, err := tx.Exec(ctx, `delete from message where message.room_id = $1`, rid)
 	return err
 }
 

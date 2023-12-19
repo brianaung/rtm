@@ -171,20 +171,7 @@ func (s *service) handleDeleteRoom(w http.ResponseWriter, r *http.Request) {
 		}
 		delete(s.hub.rooms, rid)
 	}
-	// delete entries in room_user table
-	if err := deleteAllUsersFromRoom(r.Context(), s.db, rid); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-		return
-	}
-	// delete entries in message table
-	if err := deleteAllMessagesFromRoom(r.Context(), s.db, rid); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-		return
-	}
-	// delete entries in room table
-	if err := deleteRoomById(r.Context(), s.db, rid); err != nil {
+	if err := deleteRoom(r.Context(), s.db, rid); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
