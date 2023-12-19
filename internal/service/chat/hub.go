@@ -1,34 +1,30 @@
 package chat
 
+import (
+	"time"
+
+	"github.com/gofrs/uuid/v5"
+)
+
 type hub struct {
-	rooms      map[string]*room // room: map[string]*member
-	broadcast  chan *message    // inbound messsages from the client
-	register   chan *client     // register requests from the client
-	unregister chan *client     // unregister requests from the client
+	rooms      map[uuid.UUID]map[*client]bool
+	broadcast  chan *message // inbound messsages from the client
+	register   chan *client  // register requests from the client
+	unregister chan *client  // unregister requests from the client
 	quit       chan bool
 }
 
-type room struct {
-	rid   string
-	rname string
-
-	members map[string]*member
-}
-
-type member struct {
-	uid     string
-	clients map[*client]bool
-}
-
 type message struct {
-	rid   string
-	uname string
-	data  []byte
+	roomID   uuid.UUID
+	userID   uuid.UUID
+	username string
+	body     string
+	time     time.Time
 }
 
 func newHub() *hub {
 	return &hub{
-		rooms:      make(map[string]*room),
+		rooms:      make(map[uuid.UUID]map[*client]bool),
 		broadcast:  make(chan *message),
 		register:   make(chan *client),
 		unregister: make(chan *client),
@@ -40,30 +36,26 @@ func (h *hub) run() {
 	for {
 		select {
 		// register, unregister chan is only for client/conn, not for removing entire user
-		// todo: another chan for removing user
+		// TODO: another chan for removing user
 		case c := <-h.register:
-			// register client to the member in the hub
-			// Note: make sure spaces are allocated before sending to this chan
-			h.rooms[c.rid].members[c.uid].clients[c] = true
+			// register client to the hub
+			h.rooms[c.roomID][c] = true
 		case c := <-h.unregister:
-			// remove client from clients map, and close the send channel
-			if room, ok := h.rooms[c.rid]; ok {
-				if _, ok := room.members[c.uid].clients[c]; ok {
-					delete(h.rooms[c.rid].members[c.uid].clients, c)
+			// remove client from the hub, and close its send channel
+			if room, ok := h.rooms[c.roomID]; ok {
+				if _, ok := room[c]; ok {
+					delete(h.rooms[c.roomID], c)
 					close(c.send)
 				}
 			}
 		case m := <-h.broadcast:
 			// broadcast messages to every client in the room
-			members := h.rooms[m.rid].members
-			for _, member := range members {
-				for c := range member.clients {
-					select {
-					case c.send <- m:
-					default:
-						delete(member.clients, c)
-						close(c.send)
-					}
+			for client := range h.rooms[m.roomID] {
+				select {
+				case client.send <- m:
+				default:
+					close(client.send)
+					delete(h.rooms[m.roomID], client)
 				}
 			}
 		case quit := <-h.quit:

@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/go-chi/jwtauth/v5"
+	"github.com/gofrs/uuid/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -13,9 +14,9 @@ type Auth struct {
 }
 
 type UserContext struct {
-	ID       string `json:"id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
+	ID       uuid.UUID `json:"id"`
+	Username string    `json:"username"`
+	Email    string    `json:"email"`
 }
 
 func Init() (a *Auth) {

@@ -6,16 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/brianaung/rtm/view"
+	"github.com/gofrs/uuid/v5"
 	"github.com/gorilla/websocket"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
-
-type msgData struct {
-	Msg     string            `json:"msg"`
-	Headers map[string]string `json:"HEADERS"`
-}
 
 const (
 	// Time allowed to write a message to the peer.
@@ -40,24 +38,24 @@ var upgrader = websocket.Upgrader{
 
 // client is a middleman between the websocket connection and the hub.
 type client struct {
-	hub   *hub
-	rid   string
-	uid   string
-	uname string
+	hub      *hub
+	roomID   uuid.UUID
+	userID   uuid.UUID
+	username string
 	// The websocket connection.
 	conn *websocket.Conn
 	// Buffered channel of outbound messages.
 	send chan *message
 }
 
-func newClient(hub *hub, rid string, uid string, uname string, conn *websocket.Conn) *client {
+func newClient(hub *hub, rid uuid.UUID, uid uuid.UUID, uname string, conn *websocket.Conn) *client {
 	return &client{
-		hub:   hub,
-		rid:   rid,
-		uid:   uid,
-		uname: uname,
-		send:  make(chan *message),
-		conn:  conn,
+		hub:      hub,
+		roomID:   rid,
+		userID:   uid,
+		username: uname,
+		send:     make(chan *message),
+		conn:     conn,
 	}
 }
 
@@ -66,7 +64,7 @@ func newClient(hub *hub, rid string, uid string, uname string, conn *websocket.C
 // The application runs readPump in a per-connection goroutine. The application
 // ensures that there is at most one reader on a connection by executing all
 // reads from this goroutine.
-func (c *client) readPump() {
+func (c *client) readPump(r *http.Request, db *pgxpool.Pool) {
 	defer func() {
 		c.conn.Close()
 		c.hub.unregister <- c
@@ -82,8 +80,22 @@ func (c *client) readPump() {
 			}
 			break
 		}
+
+		mid := uuid.Must(uuid.NewV4())
+
+		data := &struct {
+			Msg     string            `json:"msg"`
+			Headers map[string]string `json:"HEADERS"`
+		}{}
+		json.Unmarshal(m, data)
+		err = addMessageEntry(context.Background(), db, &Message{ID: mid, Msg: data.Msg, Time: time.Now(), RoomID: c.roomID, UserID: c.userID})
+		if err != nil {
+			log.Printf("error: %v", err)
+			break
+		}
+
 		m = bytes.TrimSpace(bytes.Replace(m, newline, space, -1))
-		c.hub.broadcast <- &message{data: m, rid: c.rid, uname: c.uname}
+		c.hub.broadcast <- &message{body: data.Msg, roomID: c.roomID, userID: c.userID, username: c.username, time: time.Now()}
 	}
 }
 
@@ -113,27 +125,23 @@ func (c *client) writePump() {
 				return
 			}
 
-			data := &msgData{}
-			json.Unmarshal(message.data, data)
-
-			time := time.Now()
+			time := message.time
 			formatted := fmt.Sprintf("%d/%02d/%02d %02d:%02d:%02d",
 				time.Year(), time.Month(), time.Day(),
 				time.Hour(), time.Minute(), time.Second())
-
-			view.MessageLog(view.MsgData{
-				Rid:   c.rid,
-				Uname: message.uname,
-				Msg:   data.Msg,
-				Time:  formatted,
-				Mine:  c.uname == message.uname,
+			view.MessageLog(view.MsgDisplayData{
+				RoomID:   message.roomID,
+				Username: message.username,
+				Msg:      message.body,
+				Time:     formatted,
+				Mine:     c.userID == message.userID,
 			}).Render(context.Background(), w)
 
 			// Add queued chat messages to the current websocket message.
 			n := len(c.send)
 			for i := 0; i < n; i++ {
-				w.Write(newline)
-				//w.Write(<-c.send)
+				// w.Write(newline)
+				// w.Write(<-c.send)
 				// t.Execute(w, newline)
 				// t.Execute(w, data.Msg)
 			}

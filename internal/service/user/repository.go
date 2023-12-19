@@ -23,7 +23,7 @@ func addUser(ctx context.Context, db *pgxpool.Pool, u *User) (*User, error) {
 	return u, nil
 }
 
-func getOneUser(ctx context.Context, db *pgxpool.Pool, username string) (*User, error) {
+func getUserByName(ctx context.Context, db *pgxpool.Pool, username string) (*User, error) {
 	u := &User{}
 	err := db.QueryRow(ctx, `select * from "user" where username = $1`, username).Scan(&u.ID, &u.Username, &u.Email, &u.Password)
 	if err != nil {

@@ -11,20 +11,21 @@ import "io"
 import "bytes"
 
 import "github.com/brianaung/rtm/internal/auth"
+import "github.com/gofrs/uuid/v5"
 
 // RoomData is used to pass room data into the html templates
-type RoomData struct {
-	Rid   string
-	Rname string
+type RoomDisplayData struct {
+	RoomID   uuid.UUID
+	RoomName string
 }
 
 // MsgData is used to pass the current message log with its metadata to the html templates
-type MsgData struct {
-	Rid   string
-	Uname string
-	Msg   string
-	Time  string
-	Mine  bool
+type MsgDisplayData struct {
+	RoomID   uuid.UUID
+	Username string
+	Msg      string
+	Time     string
+	Mine     bool
 }
 
 func layout(user *auth.UserContext) templ.Component {

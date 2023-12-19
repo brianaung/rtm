@@ -29,7 +29,7 @@ func (s *service) handleSignup(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 
 	// todo: more input validations
-	if u, _ := getOneUser(r.Context(), s.db, username); u != nil {
+	if u, _ := getUserByName(r.Context(), s.db, username); u != nil {
 		w.Write([]byte("username already exists"))
 		return
 	}
@@ -55,7 +55,7 @@ func (s *service) handleLogin(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 
-	u, err := getOneUser(r.Context(), s.db, username)
+	u, err := getUserByName(r.Context(), s.db, username)
 	if err != nil {
 		w.Write([]byte("user not found"))
 		return

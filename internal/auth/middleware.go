@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/jwtauth/v5"
+	"github.com/gofrs/uuid/v5"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
@@ -23,7 +24,7 @@ func (a *Auth) Authenticator() func(http.Handler) http.Handler {
 
 			// set context with logged in user data so other handlers have access to it
 			res := UserContext{
-				ID:       claims["id"].(string),
+				ID:       uuid.Must(uuid.FromString(claims["id"].(string))),
 				Username: claims["username"].(string),
 				Email:    claims["email"].(string),
 			}
@@ -35,4 +36,3 @@ func (a *Auth) Authenticator() func(http.Handler) http.Handler {
 		return http.HandlerFunc(hfn)
 	}
 }
-
