@@ -129,7 +129,7 @@ func (c *client) writePump() {
 			formatted := fmt.Sprintf("%d/%02d/%02d %02d:%02d:%02d",
 				time.Year(), time.Month(), time.Day(),
 				time.Hour(), time.Minute(), time.Second())
-			view.MessageLog(view.MsgData{
+			view.MessageLog(view.MsgDisplayData{
 				Rid:   message.rid,
 				Uname: message.uname,
 				Msg:   message.msg,

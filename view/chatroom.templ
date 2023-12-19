@@ -2,7 +2,7 @@ package view
 
 import "github.com/brianaung/rtm/internal/auth"
 
-templ Chatroom(user *auth.UserContext, room RoomData, ms []MsgData) {
+templ Chatroom(user *auth.UserContext, room RoomDisplayData, ms []MsgDisplayData) {
 	@layout(user) {
 		<article>
 			<div class="flex items-center justify-between">
@@ -33,7 +33,7 @@ templ Chatroom(user *auth.UserContext, room RoomData, ms []MsgData) {
 	}
 }
 
-templ MessageLog(msg MsgData) {
+templ MessageLog(msg MsgDisplayData) {
 	<div hx-swap-oob="afterbegin:#log">
 		<div>
 			<p

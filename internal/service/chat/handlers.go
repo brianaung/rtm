@@ -22,9 +22,9 @@ func (s *service) handleDashboard(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	roomsData := make([]view.RoomData, 0)
+	roomsData := make([]view.RoomDisplayData, 0)
 	for _, r := range rooms {
-		roomsData = append(roomsData, view.RoomData{Rid: r.ID, Rname: r.Name})
+		roomsData = append(roomsData, view.RoomDisplayData{Rid: r.ID, Rname: r.Name})
 	}
 	w.WriteHeader(http.StatusOK)
 	view.Dashboard(user, roomsData).Render(r.Context(), w)
@@ -134,7 +134,7 @@ func (s *service) handleGotoRoom(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 	}
-	view.Chatroom(user, view.RoomData{Rid: room.ID, Rname: room.Name}, msgData).Render(r.Context(), w)
+	view.Chatroom(user, view.RoomDisplayData{Rid: room.ID, Rname: room.Name}, msgData).Render(r.Context(), w)
 }
 
 // handleDeleteRoom allows user to delete the entire room.

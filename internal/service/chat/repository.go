@@ -75,7 +75,7 @@ func getAllRooms(ctx context.Context, db *pgxpool.Pool) ([]*Room, error) {
 	return rooms, nil
 }
 
-func getMessagesFromRoom(ctx context.Context, db *pgxpool.Pool, rid uuid.UUID, uid uuid.UUID) ([]view.MsgData, error) {
+func getMessagesFromRoom(ctx context.Context, db *pgxpool.Pool, rid uuid.UUID, uid uuid.UUID) ([]view.MsgDisplayData, error) {
 	rows, err := db.Query(ctx,
 		`select message.msg, message.time, u.username, message.user_id = $1 as mine
             from message 
@@ -85,9 +85,9 @@ func getMessagesFromRoom(ctx context.Context, db *pgxpool.Pool, rid uuid.UUID, u
 	if err != nil {
 		return nil, err
 	}
-	ms := make([]view.MsgData, 0)
+	ms := make([]view.MsgDisplayData, 0)
 	for rows.Next() {
-		var m view.MsgData
+		var m view.MsgDisplayData
 		var time time.Time
 		err := rows.Scan(&m.Msg, &time, &m.Uname, &m.Mine)
 		if err != nil {

@@ -12,7 +12,7 @@ import "bytes"
 
 import "github.com/brianaung/rtm/internal/auth"
 
-func Dashboard(user *auth.UserContext, rooms []RoomData) templ.Component {
+func Dashboard(user *auth.UserContext, rooms []RoomDisplayData) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
 		if !templ_7745c5c3_IsBuffer {
