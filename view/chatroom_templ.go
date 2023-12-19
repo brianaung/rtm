@@ -12,7 +12,7 @@ import "bytes"
 
 import "github.com/brianaung/rtm/internal/auth"
 
-func Chatroom(user *auth.UserContext, room RoomData) templ.Component {
+func Chatroom(user *auth.UserContext, room RoomData, ms []MsgData) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
 		if !templ_7745c5c3_IsBuffer {
@@ -79,7 +79,17 @@ func Chatroom(user *auth.UserContext, room RoomData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"><div class=\"flex flex-col-reverse max-h-full overflow-y-auto\" id=\"log\"></div><form id=\"form\" ws-send class=\"flex justify-between w-full\"><input type=\"text\" name=\"msg\" size=\"64\" autofocus class=\"w-full\"> <input type=\"submit\" value=\"Send\"></form></section></article>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"><div class=\"flex flex-col-reverse max-h-full overflow-y-auto\" id=\"log\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			for _, m := range ms {
+				templ_7745c5c3_Err = MessageLog(m).Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><form id=\"form\" ws-send class=\"flex justify-between w-full\"><input type=\"text\" name=\"msg\" size=\"64\" autofocus class=\"w-full\"> <input type=\"submit\" value=\"Send\"></form></section></article>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

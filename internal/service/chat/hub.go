@@ -1,6 +1,8 @@
 package chat
 
 import (
+	"time"
+
 	"github.com/gofrs/uuid/v5"
 )
 
@@ -14,8 +16,10 @@ type hub struct {
 
 type message struct {
 	rid   uuid.UUID
+	uid   uuid.UUID
 	uname string
-	data  []byte
+	msg   string
+	time  time.Time
 }
 
 func newHub() *hub {

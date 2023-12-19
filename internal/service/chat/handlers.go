@@ -128,7 +128,13 @@ func (s *service) handleGotoRoom(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	view.Chatroom(user, view.RoomData{Rid: room.ID, Rname: room.Name}).Render(r.Context(), w)
+	// get message history
+	msgData, err := getMessagesFromRoom(r.Context(), s.db, rid, user.ID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+	}
+	view.Chatroom(user, view.RoomData{Rid: room.ID, Rname: room.Name}, msgData).Render(r.Context(), w)
 }
 
 // handleDeleteRoom allows user to delete the entire room.
@@ -165,13 +171,19 @@ func (s *service) handleDeleteRoom(w http.ResponseWriter, r *http.Request) {
 		}
 		delete(s.hub.rooms, rid)
 	}
-	// delete entries in room_user
+	// delete entries in room_user table
 	if err := deleteAllUsersFromRoom(r.Context(), s.db, rid); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
-	// delete entries in room
+	// delete entries in message table
+	if err := deleteAllMessagesFromRoom(r.Context(), s.db, rid); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	// delete entries in room table
 	if err := deleteRoomById(r.Context(), s.db, rid); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -205,5 +217,5 @@ func (s *service) serveWs(w http.ResponseWriter, r *http.Request) {
 	c := newClient(s.hub, rid, user.ID, user.Username, conn)
 	s.hub.register <- c
 	go c.writePump()
-	go c.readPump()
+	go c.readPump(r, s.db)
 }
