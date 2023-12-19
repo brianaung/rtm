@@ -88,7 +88,7 @@ func (c *client) readPump(r *http.Request, db *pgxpool.Pool) {
 			Headers map[string]string `json:"HEADERS"`
 		}{}
 		json.Unmarshal(m, data)
-		err = addMessage(context.Background(), db, &Message{ID: mid, Msg: data.Msg, Time: time.Now(), RoomID: c.roomID, UserID: c.userID})
+		err = addMessageEntry(context.Background(), db, &Message{ID: mid, Msg: data.Msg, Time: time.Now(), RoomID: c.roomID, UserID: c.userID})
 		if err != nil {
 			log.Printf("error: %v", err)
 			break

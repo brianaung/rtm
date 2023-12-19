@@ -30,25 +30,67 @@ type Message struct {
 	UserID uuid.UUID `json:"user_id"`
 }
 
-// =================================== Update ===================================
-func addRoom(ctx context.Context, db *pgxpool.Pool, r *Room) error {
-	_, err := db.Exec(ctx, `insert into room(id, roomname, creator_id) values($1, $2, $3)`, r.ID, r.Name, r.CreatorID)
-	return err
+// =================================== Creating rooms and adding users to rooms ===================================
+// createRoomWithCreator adds a new room entry and add the creator as an initial member of the room.
+//
+// This function first creates a new entry in the room table, then it updates
+// the room_user table with the creator_id so that the creator will be apart of
+// the newly created room.
+func createRoomWithCreator(ctx context.Context, db *pgxpool.Pool, r *Room) error {
+	tx, err := db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+	// add room entry (update room table)
+	if err := addRoomEntry(ctx, tx, r); err != nil {
+		return err
+	}
+	// add user to room (update room_user table)
+	if err := addUserRoomEntry(ctx, tx, &RoomUser{RoomID: r.ID, UserID: r.CreatorID}); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
 }
 
 func addUserToRoom(ctx context.Context, db *pgxpool.Pool, ru *RoomUser) error {
-	_, err := db.Exec(ctx, `insert into room_user(room_id, user_id) values($1, $2)`, ru.RoomID, ru.UserID)
+	tx, err := db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+	if err := addUserRoomEntry(ctx, tx, &RoomUser{RoomID: ru.RoomID, UserID: ru.UserID}); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
+func addRoomEntry(ctx context.Context, tx pgx.Tx, r *Room) error {
+	_, err := tx.Exec(ctx, `insert into room(id, roomname, creator_id) values($1, $2, $3)`, r.ID, r.Name, r.CreatorID)
 	return err
 }
 
-func addMessage(ctx context.Context, db *pgxpool.Pool, m *Message) error {
+func addUserRoomEntry(ctx context.Context, tx pgx.Tx, ru *RoomUser) error {
+	_, err := tx.Exec(ctx, `insert into room_user(room_id, user_id) values($1, $2)`, ru.RoomID, ru.UserID)
+	return err
+}
+
+func isAMember(ctx context.Context, db *pgxpool.Pool, ru *RoomUser) (bool, error) {
+	exists := false
+	err := db.QueryRow(ctx, `select exists(select 1 from room_user ru where ru.room_id = $1 and ru.user_id = $2)`, ru.RoomID, ru.UserID).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
+// ================================================================================================================
+
+func addMessageEntry(ctx context.Context, db *pgxpool.Pool, m *Message) error {
 	_, err := db.Exec(ctx, `insert into message(id, msg, time, room_id, user_id) values($1, $2, $3, $4, $5)`, m.ID, m.Msg, m.Time, m.RoomID, m.UserID)
 	return err
 }
 
-// ==============================================================================
-
-// =================================== Read ===================================
 func getRoomByID(ctx context.Context, db *pgxpool.Pool, rid uuid.UUID) (*Room, error) {
 	r := &Room{}
 	err := db.QueryRow(ctx, `select * from room where room.id = $1`, rid).Scan(&r.ID, &r.Name, &r.CreatorID)
@@ -129,9 +171,7 @@ func getRoomsFromUser(ctx context.Context, db *pgxpool.Pool, uid uuid.UUID) ([]*
 	return rooms, nil
 }
 
-// ==============================================================================
-
-// =================================== Delete ===================================
+// =================================== Deleting a room ===================================
 // deleteRoom performs the deletion of a room and its associated entries.
 //
 // It deletes users associated with the room from the room_user junction table,
@@ -175,13 +215,4 @@ func deleteAllMessagesFromRoom(ctx context.Context, tx pgx.Tx, rid uuid.UUID) er
 	return err
 }
 
-// ==============================================================================
-
-func isAMember(ctx context.Context, db *pgxpool.Pool, ru *RoomUser) (bool, error) {
-	exists := false
-	err := db.QueryRow(ctx, `select exists(select 1 from room_user ru where ru.room_id = $1 and ru.user_id = $2)`, ru.RoomID, ru.UserID).Scan(&exists)
-	if err != nil {
-		return false, err
-	}
-	return exists, nil
-}
+// =======================================================================================

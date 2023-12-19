@@ -38,19 +38,13 @@ func (s *service) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
 	rname := r.FormValue("rname")
 	rid := uuid.Must(uuid.NewV4())
+	if err := createRoomWithCreator(r.Context(), s.db, &Room{ID: rid, Name: rname, CreatorID: user.ID}); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
 	// to store client connections in-memory
 	s.hub.rooms[rid] = make(map[*client]bool)
-	// store room data and its members details in db
-	if err := addRoom(r.Context(), s.db, &Room{ID: rid, Name: rname, CreatorID: user.ID}); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-		return
-	}
-	if err := addUserToRoom(r.Context(), s.db, &RoomUser{RoomID: rid, UserID: user.ID}); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-		return
-	}
 	w.Header().Set("HX-Redirect", "/room/"+rid.String())
 	w.WriteHeader(http.StatusOK)
 }
@@ -64,32 +58,26 @@ func (s *service) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
 	rid := uuid.Must(uuid.FromString(r.FormValue("rid")))
 	// check for room
-	room, err := getRoomByID(r.Context(), s.db, rid)
-	if err != nil {
+	if room, err := getRoomByID(r.Context(), s.db, rid); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
-	}
-	if room == nil {
+	} else if room == nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Room does not exists."))
 		return
 	}
-	// check for user
-	ok, err := isAMember(r.Context(), s.db, &RoomUser{RoomID: rid, UserID: user.ID})
-	if err != nil {
+	// check if already a member
+	if isMember, err := isAMember(r.Context(), s.db, &RoomUser{RoomID: rid, UserID: user.ID}); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
-	}
-	if ok {
+	} else if isMember {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("You are already in the room."))
 		return
 	}
-	// finally, add user to room
-	err = addUserToRoom(r.Context(), s.db, &RoomUser{RoomID: rid, UserID: user.ID})
-	if err != nil {
+	if err := addUserToRoom(r.Context(), s.db, &RoomUser{RoomID: rid, UserID: user.ID}); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
@@ -106,26 +94,23 @@ func (s *service) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
 func (s *service) handleGotoRoom(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
 	rid := uuid.Must(uuid.FromString(chi.URLParam(r, "rid")))
-	ok, err := isAMember(r.Context(), s.db, &RoomUser{RoomID: rid, UserID: user.ID})
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-		return
-	}
-	if !ok {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("You do not have access to the room."))
-		return
-	}
 	room, err := getRoomByID(r.Context(), s.db, rid)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
-	}
-	if room == nil {
+	} else if room == nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
+		return
+	}
+	if isMember, err := isAMember(r.Context(), s.db, &RoomUser{RoomID: rid, UserID: user.ID}); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	} else if !isMember {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("You do not have access to the room."))
 		return
 	}
 	// get message history
@@ -151,16 +136,21 @@ func (s *service) handleDeleteRoom(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
-	}
-	if room == nil {
+	} else if room != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		w.Write([]byte("Room does not exists."))
 		return
 	}
 	// check for permission
 	if room.CreatorID != user.ID {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("You do not have permission to delete this room."))
+		return
+	}
+	// clean db
+	if err := deleteRoom(r.Context(), s.db, rid); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
 		return
 	}
 	// clean in-memory client connections
@@ -170,11 +160,6 @@ func (s *service) handleDeleteRoom(w http.ResponseWriter, r *http.Request) {
 			c.conn.Close()
 		}
 		delete(s.hub.rooms, rid)
-	}
-	if err := deleteRoom(r.Context(), s.db, rid); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-		return
 	}
 	w.Header().Set("HX-Redirect", "/dashboard")
 	w.WriteHeader(http.StatusOK)
