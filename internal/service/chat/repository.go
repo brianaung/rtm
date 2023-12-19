@@ -75,13 +75,17 @@ func getAllRooms(ctx context.Context, db *pgxpool.Pool) ([]*Room, error) {
 	return rooms, nil
 }
 
+// getMessagesFromRoom retrieves top 10 latest messages from the specified room.
+//
+// The data is formatted in a way to use as view.MsgData by the relevant html templates.
 func getMessagesFromRoom(ctx context.Context, db *pgxpool.Pool, rid uuid.UUID, uid uuid.UUID) ([]view.MsgDisplayData, error) {
 	rows, err := db.Query(ctx,
 		`select message.msg, message.time, u.username, message.user_id = $1 as mine
             from message 
             inner join "user" u on u.id = message.user_id
             where message.room_id = $2
-            order by message.time desc`, uid, rid)
+            order by message.time desc
+            limit 10`, uid, rid)
 	if err != nil {
 		return nil, err
 	}
