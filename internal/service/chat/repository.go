@@ -17,16 +17,16 @@ type Room struct {
 }
 
 type RoomUser struct {
-	Rid uuid.UUID `json:"room_id"`
-	Uid uuid.UUID `json:"user_id"`
+	RoomID uuid.UUID `json:"room_id"`
+	UserID uuid.UUID `json:"user_id"`
 }
 
 type Message struct {
-	ID   uuid.UUID `json:"id"`
-	Msg  string    `json:"msg"`
-	Time time.Time `json:"time"`
-	Rid  uuid.UUID `json:"room_id"`
-	Uid  uuid.UUID `json:"user_id"`
+	ID     uuid.UUID `json:"id"`
+	Msg    string    `json:"msg"`
+	Time   time.Time `json:"time"`
+	RoomID uuid.UUID `json:"room_id"`
+	UserID uuid.UUID `json:"user_id"`
 }
 
 // =================================== Update ===================================
@@ -36,21 +36,21 @@ func addRoom(ctx context.Context, db *pgxpool.Pool, r *Room) error {
 }
 
 func addUserToRoom(ctx context.Context, db *pgxpool.Pool, ru *RoomUser) error {
-	_, err := db.Exec(ctx, `insert into room_user(room_id, user_id) values($1, $2)`, ru.Rid, ru.Uid)
+	_, err := db.Exec(ctx, `insert into room_user(room_id, user_id) values($1, $2)`, ru.RoomID, ru.UserID)
 	return err
 }
 
 func addMessage(ctx context.Context, db *pgxpool.Pool, m *Message) error {
-	_, err := db.Exec(ctx, `insert into message(id, msg, time, room_id, user_id) values($1, $2, $3, $4, $5)`, m.ID, m.Msg, m.Time, m.Rid, m.Uid)
+	_, err := db.Exec(ctx, `insert into message(id, msg, time, room_id, user_id) values($1, $2, $3, $4, $5)`, m.ID, m.Msg, m.Time, m.RoomID, m.UserID)
 	return err
 }
 
 // ==============================================================================
 
 // =================================== Read ===================================
-func getRoomByID(ctx context.Context, db *pgxpool.Pool, id uuid.UUID) (*Room, error) {
+func getRoomByID(ctx context.Context, db *pgxpool.Pool, rid uuid.UUID) (*Room, error) {
 	r := &Room{}
-	err := db.QueryRow(ctx, `select * from room where room.id = $1`, id).Scan(&r.ID, &r.Name, &r.CreatorID)
+	err := db.QueryRow(ctx, `select * from room where room.id = $1`, rid).Scan(&r.ID, &r.Name, &r.CreatorID)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func getMessagesFromRoom(ctx context.Context, db *pgxpool.Pool, rid uuid.UUID, u
 	for rows.Next() {
 		var m view.MsgDisplayData
 		var time time.Time
-		err := rows.Scan(&m.Msg, &time, &m.Uname, &m.Mine)
+		err := rows.Scan(&m.Msg, &time, &m.Username, &m.Mine)
 		if err != nil {
 			return nil, err
 		}
@@ -137,7 +137,7 @@ func deleteRoomById(ctx context.Context, db *pgxpool.Pool, rid uuid.UUID) error 
 }
 
 func deleteUserFromRoom(ctx context.Context, db *pgxpool.Pool, ru *RoomUser) error {
-	_, err := db.Exec(ctx, `delete from room_user ru where ru.room_id = $1 and ru.user_id = $2`, ru.Rid, ru.Uid)
+	_, err := db.Exec(ctx, `delete from room_user ru where ru.room_id = $1 and ru.user_id = $2`, ru.RoomID, ru.UserID)
 	return err
 }
 
@@ -155,7 +155,7 @@ func deleteAllMessagesFromRoom(ctx context.Context, db *pgxpool.Pool, rid uuid.U
 
 func isAMember(ctx context.Context, db *pgxpool.Pool, ru *RoomUser) (bool, error) {
 	exists := false
-	err := db.QueryRow(ctx, `select exists(select 1 from room_user ru where ru.room_id = $1 and ru.user_id = $2)`, ru.Rid, ru.Uid).Scan(&exists)
+	err := db.QueryRow(ctx, `select exists(select 1 from room_user ru where ru.room_id = $1 and ru.user_id = $2)`, ru.RoomID, ru.UserID).Scan(&exists)
 	if err != nil {
 		return false, err
 	}

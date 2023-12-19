@@ -24,7 +24,7 @@ func (s *service) handleDashboard(w http.ResponseWriter, r *http.Request) {
 	}
 	roomsData := make([]view.RoomDisplayData, 0)
 	for _, r := range rooms {
-		roomsData = append(roomsData, view.RoomDisplayData{Rid: r.ID, Rname: r.Name})
+		roomsData = append(roomsData, view.RoomDisplayData{RoomID: r.ID, RoomName: r.Name})
 	}
 	w.WriteHeader(http.StatusOK)
 	view.Dashboard(user, roomsData).Render(r.Context(), w)
@@ -46,7 +46,7 @@ func (s *service) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	if err := addUserToRoom(r.Context(), s.db, &RoomUser{Rid: rid, Uid: user.ID}); err != nil {
+	if err := addUserToRoom(r.Context(), s.db, &RoomUser{RoomID: rid, UserID: user.ID}); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
@@ -76,7 +76,7 @@ func (s *service) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// check for user
-	ok, err := isAMember(r.Context(), s.db, &RoomUser{Rid: rid, Uid: user.ID})
+	ok, err := isAMember(r.Context(), s.db, &RoomUser{RoomID: rid, UserID: user.ID})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -88,7 +88,7 @@ func (s *service) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// finally, add user to room
-	err = addUserToRoom(r.Context(), s.db, &RoomUser{Rid: rid, Uid: user.ID})
+	err = addUserToRoom(r.Context(), s.db, &RoomUser{RoomID: rid, UserID: user.ID})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -106,7 +106,7 @@ func (s *service) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
 func (s *service) handleGotoRoom(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*auth.UserContext)
 	rid := uuid.Must(uuid.FromString(chi.URLParam(r, "rid")))
-	ok, err := isAMember(r.Context(), s.db, &RoomUser{Rid: rid, Uid: user.ID})
+	ok, err := isAMember(r.Context(), s.db, &RoomUser{RoomID: rid, UserID: user.ID})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -134,7 +134,7 @@ func (s *service) handleGotoRoom(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 	}
-	view.Chatroom(user, view.RoomDisplayData{Rid: room.ID, Rname: room.Name}, msgData).Render(r.Context(), w)
+	view.Chatroom(user, view.RoomDisplayData{RoomID: room.ID, RoomName: room.Name}, msgData).Render(r.Context(), w)
 }
 
 // handleDeleteRoom allows user to delete the entire room.

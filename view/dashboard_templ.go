@@ -87,7 +87,7 @@ func Dashboard(user *auth.UserContext, rooms []RoomDisplayData) templ.Component 
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var8 templ.SafeURL = templ.URL("/room/" + r.Rid.String())
+					var templ_7745c5c3_Var8 templ.SafeURL = templ.URL("/room/" + r.RoomID.String())
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(string(templ_7745c5c3_Var8)))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -96,7 +96,7 @@ func Dashboard(user *auth.UserContext, rooms []RoomDisplayData) templ.Component 
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var9 string = r.Rname
+					var templ_7745c5c3_Var9 string = r.RoomName
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -110,7 +110,7 @@ func Dashboard(user *auth.UserContext, rooms []RoomDisplayData) templ.Component 
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var11 string = r.Rid.String()
+					var templ_7745c5c3_Var11 string = r.RoomID.String()
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err

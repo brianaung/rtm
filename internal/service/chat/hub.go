@@ -15,11 +15,11 @@ type hub struct {
 }
 
 type message struct {
-	rid   uuid.UUID
-	uid   uuid.UUID
-	uname string
-	msg   string
-	time  time.Time
+	roomID   uuid.UUID
+	userID   uuid.UUID
+	username string
+	body     string
+	time     time.Time
 }
 
 func newHub() *hub {
@@ -39,23 +39,23 @@ func (h *hub) run() {
 		// TODO: another chan for removing user
 		case c := <-h.register:
 			// register client to the hub
-			h.rooms[c.rid][c] = true
+			h.rooms[c.roomID][c] = true
 		case c := <-h.unregister:
 			// remove client from the hub, and close its send channel
-			if room, ok := h.rooms[c.rid]; ok {
+			if room, ok := h.rooms[c.roomID]; ok {
 				if _, ok := room[c]; ok {
-					delete(h.rooms[c.rid], c)
+					delete(h.rooms[c.roomID], c)
 					close(c.send)
 				}
 			}
 		case m := <-h.broadcast:
 			// broadcast messages to every client in the room
-			for client := range h.rooms[m.rid] {
+			for client := range h.rooms[m.roomID] {
 				select {
 				case client.send <- m:
 				default:
 					close(client.send)
-					delete(h.rooms[m.rid], client)
+					delete(h.rooms[m.roomID], client)
 				}
 			}
 		case quit := <-h.quit:

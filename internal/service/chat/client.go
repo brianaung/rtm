@@ -38,10 +38,10 @@ var upgrader = websocket.Upgrader{
 
 // client is a middleman between the websocket connection and the hub.
 type client struct {
-	hub   *hub
-	rid   uuid.UUID
-	uid   uuid.UUID
-	uname string
+	hub      *hub
+	roomID   uuid.UUID
+	userID   uuid.UUID
+	username string
 	// The websocket connection.
 	conn *websocket.Conn
 	// Buffered channel of outbound messages.
@@ -50,12 +50,12 @@ type client struct {
 
 func newClient(hub *hub, rid uuid.UUID, uid uuid.UUID, uname string, conn *websocket.Conn) *client {
 	return &client{
-		hub:   hub,
-		rid:   rid,
-		uid:   uid,
-		uname: uname,
-		send:  make(chan *message),
-		conn:  conn,
+		hub:      hub,
+		roomID:   rid,
+		userID:   uid,
+		username: uname,
+		send:     make(chan *message),
+		conn:     conn,
 	}
 }
 
@@ -88,14 +88,14 @@ func (c *client) readPump(r *http.Request, db *pgxpool.Pool) {
 			Headers map[string]string `json:"HEADERS"`
 		}{}
 		json.Unmarshal(m, data)
-		err = addMessage(context.Background(), db, &Message{ID: mid, Msg: data.Msg, Time: time.Now(), Rid: c.rid, Uid: c.uid})
+		err = addMessage(context.Background(), db, &Message{ID: mid, Msg: data.Msg, Time: time.Now(), RoomID: c.roomID, UserID: c.userID})
 		if err != nil {
 			log.Printf("error: %v", err)
 			break
 		}
 
 		m = bytes.TrimSpace(bytes.Replace(m, newline, space, -1))
-		c.hub.broadcast <- &message{msg: data.Msg, rid: c.rid, uid: c.uid, uname: c.uname, time: time.Now()}
+		c.hub.broadcast <- &message{body: data.Msg, roomID: c.roomID, userID: c.userID, username: c.username, time: time.Now()}
 	}
 }
 
@@ -130,11 +130,11 @@ func (c *client) writePump() {
 				time.Year(), time.Month(), time.Day(),
 				time.Hour(), time.Minute(), time.Second())
 			view.MessageLog(view.MsgDisplayData{
-				Rid:   message.rid,
-				Uname: message.uname,
-				Msg:   message.msg,
-				Time:  formatted,
-				Mine:  c.uid == message.uid,
+				RoomID:   message.roomID,
+				Username: message.username,
+				Msg:      message.body,
+				Time:     formatted,
+				Mine:     c.userID == message.userID,
 			}).Render(context.Background(), w)
 
 			// Add queued chat messages to the current websocket message.

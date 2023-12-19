@@ -7,17 +7,17 @@ templ Chatroom(user *auth.UserContext, room RoomDisplayData, ms []MsgDisplayData
 		<article>
 			<div class="flex items-center justify-between">
 				<div>
-					<h2>{ room.Rname }</h2>
-					<p>#{ room.Rid.String() }</p>
+					<h2>{ room.RoomName }</h2>
+					<p>#{ room.RoomID.String() }</p>
 				</div>
-				<button class="bg-red-500" hx-get={ "/delete/" + room.Rid.String() } hx-swap="none">
+				<button class="bg-red-500" hx-get={ "/delete/" + room.RoomID.String() } hx-swap="none">
 					delete room
 				</button>
 			</div>
 			<section
  				class="flex flex-col justify-end h-[80vh]"
  				hx-ext="ws"
- 				ws-connect={ "/ws/chat/" + room.Rid.String() }
+ 				ws-connect={ "/ws/chat/" + room.RoomID.String() }
 			>
 				<div class="flex flex-col-reverse max-h-full overflow-y-auto" id="log">
 					for _, m := range ms {
@@ -38,7 +38,7 @@ templ MessageLog(msg MsgDisplayData) {
 		<div>
 			<p
  				class={ "text-xs", templ.KV("text-right", msg.Mine) }
-			>{ msg.Uname }"@"{ msg.Time }</p>
+			>{ msg.Username } { msg.Time }</p>
 			<p
  				class={
 					"text-white whitespace-normal overflow-hidden w-fit rounded p-1",

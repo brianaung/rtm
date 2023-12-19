@@ -21,8 +21,8 @@ templ Dashboard(user *auth.UserContext, rooms []RoomDisplayData) {
 				<ul>
 					for _, r := range rooms {
 						<li>
-							<a href={ templ.URL("/room/" + r.Rid.String()) }>{ r.Rname }</a>
-							#{ r.Rid.String() }
+							<a href={ templ.URL("/room/" + r.RoomID.String()) }>{ r.RoomName }</a>
+							#{ r.RoomID.String() }
 						</li>
 					}
 				</ul>

@@ -5,17 +5,17 @@ import "github.com/gofrs/uuid/v5"
 
 // RoomData is used to pass room data into the html templates
 type RoomDisplayData struct {
-	Rid   uuid.UUID
-	Rname string
+	RoomID   uuid.UUID
+	RoomName string
 }
 
 // MsgData is used to pass the current message log with its metadata to the html templates
 type MsgDisplayData struct {
-	Rid   uuid.UUID
-	Uname string
-	Msg   string
-	Time  string
-	Mine  bool
+	RoomID   uuid.UUID
+	Username string
+	Msg      string
+	Time     string
+	Mine     bool
 }
 
 templ layout(user *auth.UserContext) {
