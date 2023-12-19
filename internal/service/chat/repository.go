@@ -62,10 +62,11 @@ func getAllRooms(ctx context.Context, db *pgxpool.Pool) ([]*Room, error) {
 func getRoomsFromUser(ctx context.Context, db *pgxpool.Pool, uid uuid.UUID) ([]*Room, error) {
 	rows, err := db.Query(ctx,
 		`select room.id, room.roomname, room.creator_id
-        from room
-        inner join room_user on room_user.room_id = room.id
-        inner join "user" u on room_user.user_id = u.id
-        where u.id = $1`, uid)
+            from room
+            inner join room_user on room_user.room_id = room.id
+            inner join "user" u on room_user.user_id = u.id
+            where u.id = $1`,
+		uid)
 	if err != nil {
 		return nil, err
 	}
@@ -81,23 +82,6 @@ func getRoomsFromUser(ctx context.Context, db *pgxpool.Pool, uid uuid.UUID) ([]*
 	return rooms, nil
 }
 
-func getUidsFromRoom(ctx context.Context, db *pgxpool.Pool, rid uuid.UUID) ([]uuid.UUID, error) {
-	rows, err := db.Query(ctx, `select (user_id) from room_user ru where ru.room_id = $1`, rid)
-	if err != nil {
-		return nil, err
-	}
-	uids := make([]uuid.UUID, 0)
-	for rows.Next() {
-		var uid uuid.UUID
-		err := rows.Scan(&uid)
-		if err != nil {
-			return nil, err
-		}
-		uids = append(uids, uid)
-	}
-	return uids, nil
-}
-
 // ==============================================================================
 
 // =================================== Delete ===================================
@@ -108,6 +92,11 @@ func deleteRoomById(ctx context.Context, db *pgxpool.Pool, rid uuid.UUID) error 
 
 func deleteUserFromRoom(ctx context.Context, db *pgxpool.Pool, ru *RoomUser) error {
 	_, err := db.Exec(ctx, `delete from room_user ru where ru.room_id = $1 and ru.user_id = $2`, ru.Rid, ru.Uid)
+	return err
+}
+
+func deleteAllUsersFromRoom(ctx context.Context, db *pgxpool.Pool, rid uuid.UUID) error {
+	_, err := db.Exec(ctx, `delete from room_user ru where ru.room_id = $1`, rid)
 	return err
 }
 
