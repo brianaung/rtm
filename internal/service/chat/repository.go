@@ -127,8 +127,7 @@ func getMessagesFromRoom(ctx context.Context, db *pgxpool.Pool, rid uuid.UUID, u
             from message 
             inner join "user" u on u.id = message.user_id
             where message.room_id = $2
-            order by message.time desc
-            limit 10`, uid, rid)
+            order by message.time desc`, uid, rid) // todo: limit 10 and fetch more with infinite scroll?
 	if err != nil {
 		return nil, err
 	}
