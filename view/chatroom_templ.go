@@ -31,7 +31,7 @@ func Chatroom(user *auth.UserContext, room RoomDisplayData, ms []MsgDisplayData)
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<article><div class=\"flex items-center justify-between\"><div><h2>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<article class=\"flex flex-col gap-6\"><section class=\"flex items-center justify-between\"><div><h2 class=\"text-lg font-semibold\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -40,7 +40,7 @@ func Chatroom(user *auth.UserContext, room RoomDisplayData, ms []MsgDisplayData)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</h2><p>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</h2><p class=\"text-gray-500 text-sm\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -54,7 +54,7 @@ func Chatroom(user *auth.UserContext, room RoomDisplayData, ms []MsgDisplayData)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div><button class=\"bg-red-500\" hx-get=\"")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div><button class=\"rounded border border-black bg-red-400 p-1\" hx-get=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -66,12 +66,12 @@ func Chatroom(user *auth.UserContext, room RoomDisplayData, ms []MsgDisplayData)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Var6 := `delete room`
+			templ_7745c5c3_Var6 := `Delete Room`
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</button></div><section class=\"flex flex-col justify-end h-[80vh]\" hx-ext=\"ws\" ws-connect=\"")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</button></section><section class=\"flex flex-col justify-end h-[80vh] gap-4\" hx-ext=\"ws\" hx-on::ws-after-message=\"document.getElementById(&#39;msg-input&#39;).value = &#39;&#39;\" ws-connect=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -79,7 +79,7 @@ func Chatroom(user *auth.UserContext, room RoomDisplayData, ms []MsgDisplayData)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"><div class=\"flex flex-col-reverse max-h-full overflow-y-auto\" id=\"log\">")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"><div class=\"border border-black rounded flex flex-col-reverse h-full max-h-full overflow-y-auto p-4 gap-4\" id=\"log\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -89,7 +89,7 @@ func Chatroom(user *auth.UserContext, room RoomDisplayData, ms []MsgDisplayData)
 					return templ_7745c5c3_Err
 				}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><form id=\"form\" ws-send class=\"flex justify-between w-full\"><input type=\"text\" name=\"msg\" size=\"64\" autofocus class=\"w-full\"> <input type=\"submit\" value=\"Send\"></form></section></article>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><form id=\"form\" ws-send class=\"flex justify-between gap-2 w-full\"><input id=\"msg-input\" type=\"text\" name=\"msg\" size=\"64\" autofocus class=\"rounded border border-black w-full p-1\"> <input class=\"rounded border border-black p-1\" type=\"submit\" value=\"Send\"></form></section></article>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -162,7 +162,7 @@ func MessageLog(msg MsgDisplayData) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var11 = []any{
-			"text-white whitespace-normal overflow-hidden w-fit rounded p-1",
+			"text-white text-lg whitespace-normal overflow-hidden max-w-[70%] w-fit rounded p-1",
 			templ.KV("ml-auto text-right bg-blue-600", msg.Mine),
 			templ.KV("bg-gray-600", !msg.Mine),
 		}

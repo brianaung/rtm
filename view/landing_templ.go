@@ -29,34 +29,34 @@ func Landing() templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<article id=\"home\"><h1>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<article class=\"flex flex-col gap-6\" id=\"home\"><h1 class=\"text-xl font-semibold\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Var3 := `shall we go.`
+			templ_7745c5c3_Var3 := `Absolutely nothing to see here so quickly get in.`
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</h1><button hx-get=\"/login-form\" hx-swap=\"outerHTML\" hx-target=\"#home\">")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</h1><div><button class=\"rounded border border-black p-1\" hx-get=\"/login-form\" hx-swap=\"outerHTML\" hx-target=\"#home\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Var4 := `login`
+			templ_7745c5c3_Var4 := `Login`
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</button> <button class=\"bg-blue-500\" hx-swap=\"outerHTML\" hx-target=\"#home\" hx-get=\"/signup-form\">")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</button> <button class=\"rounded border border-black p-1 bg-blue-400\" hx-swap=\"outerHTML\" hx-target=\"#home\" hx-get=\"/signup-form\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Var5 := `signup`
+			templ_7745c5c3_Var5 := `Signup`
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</button></article>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</button></div></article>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -89,34 +89,34 @@ func LoginForm() templ.Component {
 			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<section><h2>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<section><a class=\"font-lg font-semibold hover:underline\" href=\"/\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Var7 := `login`
+		templ_7745c5c3_Var7 := `Back`
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</h2><form class=\"flex flex-col gap-4\" hx-post=\"/login\" hx-trigger=\"submit\" hx-swap=\"none\"><div class=\"flex flex-col\"><label for=\"username\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</a><form class=\"flex flex-col items-center gap-4\" hx-post=\"/login\" hx-trigger=\"submit\" hx-swap=\"none\"><div class=\"flex flex-col\"><label for=\"username\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Var8 := `username`
+		templ_7745c5c3_Var8 := `Username`
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</label> <input id=\"username\" name=\"username\" rows=\"1\" cols=\"20\"></div><div class=\"flex flex-col\"><label for=\"password\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</label> <input class=\"rounded border border-black p-1\" id=\"username\" name=\"username\" rows=\"1\" cols=\"20\"></div><div class=\"flex flex-col\"><label for=\"password\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Var9 := `password`
+		templ_7745c5c3_Var9 := `Password`
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</label> <input id=\"password\" name=\"password\" rows=\"1\" cols=\"20\"></div><input class=\"bg-blue-500\" type=\"submit\" value=\"login\"></form></section>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</label> <input class=\"rounded border border-black p-1\" id=\"password\" name=\"password\" rows=\"1\" cols=\"20\"></div><input class=\"rounded border border-black bg-blue-400 p-1\" type=\"submit\" value=\"Login\"></form></section>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -140,43 +140,43 @@ func SignupForm() templ.Component {
 			templ_7745c5c3_Var10 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<section><h2>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<section><a class=\"font-lg font-semibold hover:underline\" href=\"/\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Var11 := `signup`
+		templ_7745c5c3_Var11 := `Back`
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</h2><form class=\"flex flex-col gap-4\" hx-post=\"/signup\" hx-trigger=\"submit\" hx-swap=\"none\"><div class=\"flex flex-col\"><label for=\"email\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</a><form class=\"flex flex-col items-center gap-4\" hx-post=\"/signup\" hx-trigger=\"submit\" hx-swap=\"none\"><div class=\"flex flex-col\"><label for=\"email\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Var12 := `email`
+		templ_7745c5c3_Var12 := `Email`
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</label> <input id=\"email\" name=\"email\" rows=\"1\" cols=\"20\"></div><div class=\"flex flex-col\"><label for=\"username\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</label> <input class=\"rounded border border-black p-1\" id=\"email\" name=\"email\" rows=\"1\" cols=\"20\"></div><div class=\"flex flex-col\"><label for=\"username\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Var13 := `username`
+		templ_7745c5c3_Var13 := `Username`
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</label> <input id=\"username\" name=\"username\" rows=\"1\" cols=\"20\"></div><div class=\"flex flex-col\"><label for=\"password\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</label> <input class=\"rounded border border-black p-1\" id=\"username\" name=\"username\" rows=\"1\" cols=\"20\"></div><div class=\"flex flex-col\"><label for=\"password\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Var14 := `password`
+		templ_7745c5c3_Var14 := `Password`
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</label> <input id=\"password\" name=\"password\" rows=\"1\" cols=\"20\"></div><input class=\"bg-blue-500\" type=\"submit\" value=\"signup\"></form></section>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</label> <input class=\"rounded border border-black p-1\" id=\"password\" name=\"password\" rows=\"1\" cols=\"20\"></div><input class=\"rounded border border-black bg-blue-400 p-1\" type=\"submit\" value=\"Signup\"></form></section>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

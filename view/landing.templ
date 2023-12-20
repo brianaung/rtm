@@ -2,48 +2,50 @@ package view
 
 templ Landing() {
 	@layout(nil) {
-		<article id="home">
-			<h1>shall we go.</h1>
-			<button hx-get="/login-form" hx-swap="outerHTML" hx-target="#home">login</button>
-			<button class="bg-blue-500" hx-swap="outerHTML" hx-target="#home" hx-get="/signup-form">signup</button>
+		<article class="flex flex-col gap-6" id="home">
+			<h1 class="text-xl font-semibold">Absolutely nothing to see here so quickly get in.</h1>
+			<div>
+				<button class="rounded border border-black p-1" hx-get="/login-form" hx-swap="outerHTML" hx-target="#home">Login</button>
+				<button class="rounded border border-black p-1 bg-blue-400" hx-swap="outerHTML" hx-target="#home" hx-get="/signup-form">Signup</button>
+			</div>
 		</article>
 	}
 }
 
 templ LoginForm() {
 	<section>
-		<h2>login</h2>
-		<form class="flex flex-col gap-4" hx-post="/login" hx-trigger="submit" hx-swap="none">
+		<a class="font-lg font-semibold hover:underline" href="/">Back</a>
+		<form class="flex flex-col items-center gap-4" hx-post="/login" hx-trigger="submit" hx-swap="none">
 			<div class="flex flex-col">
-				<label for="username">username</label>
-				<input id="username" name="username" rows="1" cols="20"/>
+				<label for="username">Username</label>
+				<input class="rounded border border-black p-1" id="username" name="username" rows="1" cols="20"/>
 			</div>
 			<div class="flex flex-col">
-				<label for="password">password</label>
-				<input id="password" name="password" rows="1" cols="20"/>
+				<label for="password">Password</label>
+				<input class="rounded border border-black p-1" id="password" name="password" rows="1" cols="20"/>
 			</div>
-			<input class="bg-blue-500" type="submit" value="login"/>
+			<input class="rounded border border-black bg-blue-400 p-1" type="submit" value="Login"/>
 		</form>
 	</section>
 }
 
 templ SignupForm() {
 	<section>
-		<h2>signup</h2>
-		<form class="flex flex-col gap-4" hx-post="/signup" hx-trigger="submit" hx-swap="none">
+		<a class="font-lg font-semibold hover:underline" href="/">Back</a>
+		<form class="flex flex-col items-center gap-4" hx-post="/signup" hx-trigger="submit" hx-swap="none">
 			<div class="flex flex-col">
-				<label for="email">email</label>
-				<input id="email" name="email" rows="1" cols="20"/>
+				<label for="email">Email</label>
+				<input class="rounded border border-black p-1" id="email" name="email" rows="1" cols="20"/>
 			</div>
 			<div class="flex flex-col">
-				<label for="username">username</label>
-				<input id="username" name="username" rows="1" cols="20"/>
+				<label for="username">Username</label>
+				<input class="rounded border border-black p-1" id="username" name="username" rows="1" cols="20"/>
 			</div>
 			<div class="flex flex-col">
-				<label for="password">password</label>
-				<input id="password" name="password" rows="1" cols="20"/>
+				<label for="password">Password</label>
+				<input class="rounded border border-black p-1" id="password" name="password" rows="1" cols="20"/>
 			</div>
-			<input class="bg-blue-500" type="submit" value="signup"/>
+			<input class="rounded border border-black bg-blue-400 p-1" type="submit" value="Signup"/>
 		</form>
 	</section>
 }

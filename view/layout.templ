@@ -30,13 +30,18 @@ templ layout(user *auth.UserContext) {
 			<link href="/dist/output.css" rel="stylesheet"/>
 		</head>
 		<body>
-			<header class="flex justify-between items-center">
-				<a href="/dashboard">home</a>
+			<header class="mx-auto container flex justify-between items-center p-4">
 				if user != nil {
-					<button hx-get="/logout" hx-trigger="click" hx-swap="none">logout</button>
+					<a class="font-bold font-2xl hover:underline" href="/dashboard">HOME</a>
+					<button
+ 						class="rounded border border-black p-1 bg-red-400"
+ 						hx-get="/logout"
+ 						hx-trigger="click"
+ 						hx-swap="none"
+					>Logout</button>
 				}
 			</header>
-			<main class="mx-auto container flex-col items-center">
+			<main class="mx-auto container flex-col items-center p-4">
 				{ children... }
 			</main>
 		</body>
