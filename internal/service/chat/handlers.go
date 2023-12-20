@@ -136,7 +136,7 @@ func (s *service) handleDeleteRoom(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
-	} else if room != nil {
+	} else if room == nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Room does not exists."))
 		return
