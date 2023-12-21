@@ -10,7 +10,7 @@ templ Chatroom(user *auth.UserContext, room RoomDisplayData, ms []MsgDisplayData
 					<h2 class="text-lg font-semibold">{ room.RoomName }</h2>
 					<p class="text-gray-500 text-sm">#{ room.RoomID.String() }</p>
 				</div>
-				<button class="rounded border border-black bg-red-400 p-1" hx-get={ "/delete/" + room.RoomID.String() } hx-swap="none">
+				<button class="rounded border border-black bg-red-400 p-1" hx-delete={ "/delete/" + room.RoomID.String() } hx-swap="none">
 					Delete Room
 				</button>
 			</section>

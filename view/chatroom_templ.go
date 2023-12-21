@@ -54,7 +54,7 @@ func Chatroom(user *auth.UserContext, room RoomDisplayData, ms []MsgDisplayData)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div><button class=\"rounded border border-black bg-red-400 p-1\" hx-get=\"")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div><button class=\"rounded border border-black bg-red-400 p-1\" hx-delete=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

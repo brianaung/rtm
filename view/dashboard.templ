@@ -12,7 +12,7 @@ templ Dashboard(user *auth.UserContext, rooms []RoomDisplayData) {
 						<input id="create-room" class="p-1" name="rname" rows="1" cols="20" placeholder="Enter room name"/>
 						<input class="cursor-pointer" type="submit" value="Create"/>
 					</form>
-					<form class="rounded border border-black p-2" hx-post="/join" hx-trigger="submit" hx-swap="none">
+					<form class="rounded border border-black p-2" hx-put="/join" hx-trigger="submit" hx-swap="none">
 						<input id="join-room" class="p-1" name="rid" rows="1" cols="20" placeholder="Enter room id"/>
 						<input class="cursor-pointer" type="submit" value="Join"/>
 					</form>
@@ -39,7 +39,7 @@ templ RoomBlock(r RoomDisplayData) {
 			<p class="font-semibold">{ r.RoomName }</p>
 			<div>
 				<button class="rounded border border-black bg-blue-400 p-1"><a href={ templ.URL("/room/" + r.RoomID.String()) }>Enter</a></button>
-				<button class="rounded border border-black bg-red-400 p-1" hx-get={ "/delete/" + r.RoomID.String() } hx-swap="none">
+				<button class="rounded border border-black bg-red-400 p-1" hx-delete={ "/delete/" + r.RoomID.String() } hx-swap="none">
 					Delete
 				</button>
 			</div>

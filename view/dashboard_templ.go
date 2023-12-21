@@ -50,7 +50,7 @@ func Dashboard(user *auth.UserContext, rooms []RoomDisplayData) templ.Component 
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</h2><div class=\"flex gap-2\"><form class=\"rounded border border-black p-2\" hx-post=\"/create\" hx-trigger=\"submit\" hx-swap=\"none\"><input id=\"create-room\" class=\"p-1\" name=\"rname\" rows=\"1\" cols=\"20\" placeholder=\"Enter room name\"> <input class=\"cursor-pointer\" type=\"submit\" value=\"Create\"></form><form class=\"rounded border border-black p-2\" hx-post=\"/join\" hx-trigger=\"submit\" hx-swap=\"none\"><input id=\"join-room\" class=\"p-1\" name=\"rid\" rows=\"1\" cols=\"20\" placeholder=\"Enter room id\"> <input class=\"cursor-pointer\" type=\"submit\" value=\"Join\"></form></div></section><section>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</h2><div class=\"flex gap-2\"><form class=\"rounded border border-black p-2\" hx-post=\"/create\" hx-trigger=\"submit\" hx-swap=\"none\"><input id=\"create-room\" class=\"p-1\" name=\"rname\" rows=\"1\" cols=\"20\" placeholder=\"Enter room name\"> <input class=\"cursor-pointer\" type=\"submit\" value=\"Create\"></form><form class=\"rounded border border-black p-2\" hx-put=\"/join\" hx-trigger=\"submit\" hx-swap=\"none\"><input id=\"join-room\" class=\"p-1\" name=\"rid\" rows=\"1\" cols=\"20\" placeholder=\"Enter room id\"> <input class=\"cursor-pointer\" type=\"submit\" value=\"Join\"></form></div></section><section>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -144,7 +144,7 @@ func RoomBlock(r RoomDisplayData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</a></button> <button class=\"rounded border border-black bg-red-400 p-1\" hx-get=\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</a></button> <button class=\"rounded border border-black bg-red-400 p-1\" hx-delete=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
